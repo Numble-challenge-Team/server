@@ -1,0 +1,22 @@
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+    defer-datasource-initialization: true
+    profiles:
+      active: true
+    database: mysql
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+      url: jdbc:mysql://localhost:3306/comedb
+      username: root
+      password: 6568
+      driver-class-name: com.mysql.cj.jdbc.Driver
