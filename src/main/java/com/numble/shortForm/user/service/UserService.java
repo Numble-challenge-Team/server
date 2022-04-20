@@ -58,7 +58,7 @@ public class UserService {
     }
 
 
-    public ResponseEntity<?> login(UserRequestDto.Login loginDto) {
+    public UserResponseDto.TokenInfo login(UserRequestDto.Login loginDto) {
         userRepository.findByEmail(loginDto.getEmail()).orElseThrow(() ->
             new CustomException(ErrorCode.NOT_FOUND_USER));
 
@@ -75,7 +75,7 @@ public class UserService {
         redisTemplate.opsForValue()
                 .set("RT:" +authentication.getName(),tokenInfo.getRefreshToken(),tokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);;
 
-        return response.success(tokenInfo,"로그인 성공", HttpStatus.OK);
+      return tokenInfo;
     }
 
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
@@ -120,4 +120,8 @@ public class UserService {
         return response.success("로그아웃 되었습니다.");
     }
 
+    public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
+        return response.success("회원정보 수정 되었습니다.");
+
+    }
 }

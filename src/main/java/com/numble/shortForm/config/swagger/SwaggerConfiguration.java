@@ -25,7 +25,7 @@ public class SwaggerConfiguration {
                 .produces(getProduceContentTypes())
                 .apiInfo(getApiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("code.sns.api"))
+                .apis(RequestHandlerSelectors.basePackage("com.numble.shortForm.user.controller"))
                 .paths(PathSelectors.ant("/**"))
                 .build();
     }
@@ -46,7 +46,7 @@ public class SwaggerConfiguration {
     private ApiInfo getApiInfo() {
         return new ApiInfoBuilder()
                 .title("API")
-                .description("sns REST API")
+                .description("shortForm REST API")
                 .contact(new Contact("[ Swagger]", "https://github.com/", "pon02129@naver.com"))
                 .version("1.0")
                 .build();

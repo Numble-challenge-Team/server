@@ -44,4 +44,14 @@ public class UserRequestDto {
         private String accessToken;
         private String refreshToken;
     }
+
+    @Getter
+    @Setter
+    public static class Change{
+        private String email;
+
+        private String password;
+
+        private String nickname;
+    }
 }
