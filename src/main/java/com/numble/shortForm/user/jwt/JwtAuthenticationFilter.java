@@ -1,6 +1,11 @@
 package com.numble.shortForm.user.jwt;
 
+import com.numble.shortForm.exception.CustomException;
+import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.entity.Authority;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,17 +37,17 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
         String token = resolveToken((HttpServletRequest) request);
-
-        if (token != null && jwtTokenProvider.validationToken(token)) {
-            String isLogout = (String) redisTemplate.opsForValue().get(token);
-            if (ObjectUtils.isEmpty(isLogout)) {
-                Authentication authentication =jwtTokenProvider.getAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-
+        // token 유효성 체크
+            if (token != null && jwtTokenProvider.validationToken(token)) {
+    
+                String isLogout = (String) redisTemplate.opsForValue().get(token);
+    
+                if (ObjectUtils.isEmpty(isLogout)) {
+                    Authentication authentication =jwtTokenProvider.getAuthentication(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+    
+                }
             }
-
-        }
-
         chain.doFilter(request,response);
     }
 

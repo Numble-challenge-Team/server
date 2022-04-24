@@ -21,12 +21,14 @@ public class SwaggerConfiguration {
     @Bean
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .useDefaultResponseMessages(false)
                 .consumes(getConsumeContentTypes())
                 .produces(getProduceContentTypes())
                 .apiInfo(getApiInfo())
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("code.sns.api"))
-                .paths(PathSelectors.ant("/**"))
+                .apis(RequestHandlerSelectors.any())
+//                .apis(RequestHandlerSelectors.basePackage("com.numble.shortForm.user.controller"))
+                .paths(PathSelectors.ant("/api/**"))
                 .build();
     }
 
@@ -46,8 +48,8 @@ public class SwaggerConfiguration {
     private ApiInfo getApiInfo() {
         return new ApiInfoBuilder()
                 .title("API")
-                .description("sns REST API")
-                .contact(new Contact("[ Swagger]", "https://github.com/", "pon02129@naver.com"))
+                .description("shortForm REST API")
+                .contact(new Contact("[OZ]", "https://github.com/", "pon02129@naver.com"))
                 .version("1.0")
                 .build();
     }

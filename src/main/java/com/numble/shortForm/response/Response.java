@@ -1,53 +1,49 @@
 package com.numble.shortForm.response;
 
+import com.numble.shortForm.user.dto.response.UserResponseDto;
+import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 
-@Component
+
+@Getter
+@Setter
+@Builder
 public class Response {
 
-    @Getter
-    @Builder
-    private static class Body{
+        @ApiModelProperty(example = "200")
+        private String state;
 
-        private int state;
+        @ApiModelProperty(example = "success")
         private String result;
-        private String message;
-        private Object data;
-    }
 
-    public ResponseEntity<?> success(Object data, String msg, HttpStatus status) {
-        Body body = Body.builder()
-                .state(status.value())
+        @ApiModelProperty(example = "가입에 성공했습니다.")
+        private String message;
+
+        @ApiModelProperty(example = "{accessToke =adsdfsvewr, refreshtoken=sfsdfsdffsdf}")
+        private Object data;
+
+
+    public static ResponseEntity<?> success(Object data, String msg, HttpStatus status) {
+        Response response = Response.builder()
+                .state(String.valueOf(status.value()))
                 .data(data)
                 .result("success")
                 .message(msg)
                 .build();
-        return ResponseEntity.ok(body);
+        return ResponseEntity.ok(response);
     }
-
-
-
-    public ResponseEntity<?> success(String msg) {
+    public static ResponseEntity<?> success(String msg) {
         return success(Collections.emptyList(), msg, HttpStatus.OK);
     }
 
-    public ResponseEntity<?> fail(Object data, String msg, HttpStatus status) {
-        Body body = Body.builder()
-                .state(status.value())
-                .data(data)
-                .result("fail")
-                .message(msg)
-                .build();
-        return ResponseEntity.ok(body);
-    }
-
-    public ResponseEntity<?> fail(String msg, HttpStatus status) {
-        return fail(Collections.emptyList(), msg, status);
-    }
 }

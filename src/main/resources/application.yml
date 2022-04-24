@@ -29,3 +29,7 @@ spring:
 
 jwt:
   secret: VlwEyVBsYt9V7zq57TejMnVUyzblYcfPQye08f7MGVA9XkHN
+springfox:
+  documentation:
+    swagger:
+        use-model-v3: false

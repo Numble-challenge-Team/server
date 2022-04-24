@@ -25,12 +25,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http
                 .csrf().disable()
-//                .httpBasic().disable()
+                .httpBasic().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/change","/api/v1/users/test").hasRole("USER")
+                .antMatchers("/api/v1/users/test").hasRole("USER")
                 .anyRequest().permitAll()
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                .accessDeniedHandler(new CustomAccessDeniedHandler())
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider,redisTemplate), UsernamePasswordAuthenticationFilter.class);
     }
