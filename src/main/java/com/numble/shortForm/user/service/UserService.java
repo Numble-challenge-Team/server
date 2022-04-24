@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final Response response;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -40,7 +39,7 @@ public class UserService {
 
     @Transactional
     public ResponseEntity<?> signUp(UserRequestDto.SignUp signUpDto) {
-        log.info("password {}",signUpDto.getPassword());
+
         userRepository.findByEmail(signUpDto.getEmail()).ifPresent( user ->{
             throw new CustomException(ErrorCode.EXIST_EMAIL_ERROR);
         });
@@ -53,8 +52,7 @@ public class UserService {
                 .build();
 
         userRepository.save(user);
-
-        return response.success("회원가입에 성공했습니다.");
+        return Response.success("회원가입에 성공했습니다.");
     }
 
 
@@ -98,7 +96,7 @@ public class UserService {
 
         redisTemplate.opsForValue()
                 .set("RT:" + authentication.getName(), tokenInfo.getRefreshToken(), tokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);
-        return response.success(tokenInfo, "Token 정보가 갱신되었습니다.", HttpStatus.OK);
+        return Response.success(tokenInfo, "Token 정보가 갱신되었습니다.", HttpStatus.OK);
     }
 
     public ResponseEntity<?> logout(UserRequestDto.Logout logoutDto) {
@@ -117,11 +115,11 @@ public class UserService {
         redisTemplate.opsForValue()
                 .set(logoutDto.getAccessToken(),"logout",expiration,TimeUnit.MILLISECONDS);
 
-        return response.success("로그아웃 되었습니다.");
+        return Response.success("로그아웃 되었습니다.");
     }
 
     public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
-        return response.success("회원정보 수정 되었습니다.");
+        return Response.success("회원정보 수정 되었습니다.");
 
     }
 }

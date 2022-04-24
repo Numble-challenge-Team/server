@@ -1,64 +1,130 @@
 package com.numble.shortForm.user.controller;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.numble.shortForm.exception.CustomException;
+import com.numble.shortForm.exception.ErrorCode;
+import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.Response;
+import com.numble.shortForm.response.ResponseDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
+import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.user.repository.UserRepository;
 import com.numble.shortForm.user.service.UserService;
-import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 @Slf4j
+@Api(tags = "유저 API")
 public class UserApiController {
 
     private final UserService userService;
-    private final Response response;
+    private final UserRepository userRepository;
 
+    @ApiOperation(value = "회원가입",notes = "<big>로그인에 성공하면, accessToken, RefreshToken 반환</big>")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "가입 완료",response = Response.class),
+            @ApiResponse(code=403,message = "권한 없음",response = ErrorResponse.class,responseContainer = "List")
+    })
     @PostMapping("/signup")
     public ResponseEntity<?> signUp(@RequestBody UserRequestDto.SignUp signUpDto) {
 
         return userService.signUp(signUpDto);
     }
 
-    @PostMapping("/login")
-    @ApiOperation(value = "로그인",notes = "로그인에 성공하면, accessToken, RefreshToken 반환")
-    @ApiModelProperty
-    public ResponseEntity<?> login(@RequestBody UserRequestDto.Login loginDto) {
-       UserResponseDto.TokenInfo tokenInfo = userService.login(loginDto);
 
-        return response.success(tokenInfo,"로그인 완료",HttpStatus.OK);
+    @ApiOperation(value = "로그인",notes = "<big>로그인에 성공하면, accessToken, RefreshToken 반환</big>")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "로그인 성공 토큰생성",response = ResponseDto.class),
+            @ApiResponse(code=403,message = "권한 없음",response = ErrorResponse.class,responseContainer = "List")
+    })
+    @PostMapping("/login")
+    public ResponseDto login(@RequestBody UserRequestDto.Login loginDto) {
+       UserResponseDto.TokenInfo tokenInfo = userService.login(loginDto);
+        return ResponseDto.builder()
+                .state(200)
+                .result("success")
+                .data(tokenInfo)
+                .message("로그인 성공")
+                .build();
+//        return response.success(tokenInfo,"로그인 완료",HttpStatus.OK);
     }
 
+
+    @ApiOperation(value = "Access Token 재발급 ",notes = "Access 토큰과 Refresh 토큰을 json 형식으로 전달")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "토큰 재발급",response = ResponseDto.class),
+            @ApiResponse(code=400,message = "Refresh Token 정보가 유효하지 않습니다.",response = ErrorResponse.class,responseContainer = "List")
+    })
     @PostMapping("/reissue")
-    @ApiOperation(value = "Access Token 재발급 ")
     public ResponseEntity<?> reissue(@RequestBody UserRequestDto.Reissue reissueDto) {
         return userService.reissue(reissueDto);
     }
 
+
+    @ApiOperation(value = "로그아웃",notes = "Access 토큰과 Refresh 토큰을 json 형식으로 전달")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "로그아웃",response = ResponseDto.class),
+            @ApiResponse(code=400,message = "Token 정보가 유효하지 않습니다.",response = ErrorResponse.class,responseContainer = "List")
+    })
     @PostMapping("/logout")
-    @ApiOperation(value = "로그아웃")
-    public ResponseEntity<?> logout(@RequestBody UserRequestDto.Logout logoutDto) {
+    ResponseEntity<?> logout(@RequestBody UserRequestDto.Logout logoutDto) {
         return userService.logout(logoutDto);
     }
 
 
-    @PutMapping("/change")
-    @ApiOperation(value = "유저 정보 변경")
-    public ResponseEntity<?> change(@RequestBody UserRequestDto.Change changeDto) {
 
-        return userService.change(changeDto);
+    @ApiOperation(value = "이메일 중복체크")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "존재하지 않은 이메일입니다.",response = ResponseDto.class),
+            @ApiResponse(code=400,message = "존재하는 이메일입니다.",response = ErrorResponse.class,responseContainer = "List")
+    })
+    @ApiImplicitParam(name = "email",value = "이메일(json 형식으로 email=\"oz@gamil.com\")")
+    @PostMapping("/validation/email")
+    ResponseEntity<?> isValidationEmail(@RequestBody Map<String,String> map) {
+
+        String email = map.get("email");
+        if (email == null) {
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"json의 email의 형식을 확인해주세요");
+        }
+
+        userRepository.findByEmail(email).ifPresent( user ->{
+            throw new CustomException(ErrorCode.EXIST_EMAIL_ERROR,String.format("[%s]는 존재하는 이메일입니다.",email));
+        });
+        return Response.success("","존재하지 않는 이메일입니다.",HttpStatus.OK);
     }
 
-    @GetMapping("/test")
-    public ResponseEntity jwtCheck(@RequestParam String message) {
 
-        return ResponseEntity.status(HttpStatus.OK).body(message);
+    @ApiOperation(value = "닉네임 중복체크")
+    @ApiResponses({
+            @ApiResponse(code=200,message = "생성가능한 닉네임",response = ResponseDto.class),
+            @ApiResponse(code=400,message = "이미 존재하는 닉네임",response = ErrorResponse.class,responseContainer = "List")
+    })
+    @ApiImplicitParam(name = "nickname",value = "닉네임(json 형식으로 nickname=\"오즈의마법사\")")
+    @PostMapping("/validation/nickname")
+    ResponseEntity<?> isValidationNickname(@RequestBody Map<String,String> map) {
+        String nickname = map.get("nickname");
+        if (nickname == null) {
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"json의 nickname의 형식을 확인해주세요");
+        }
+
+        userRepository.findByNickname(nickname).ifPresent(user ->{
+            throw new CustomException(ErrorCode.EXIST_NICKNAME_ERROR,String.format("[%s]는 존재하는 닉네임입니다.",nickname));
+        });
+
+        return Response.success("","존재하지 않는 닉네임입니다.",HttpStatus.OK);
     }
+
+
 }
