@@ -21,8 +21,8 @@ public enum ErrorCode {
     UNSUPPORTED_TOKEN(HttpStatus.BAD_REQUEST,"지원하지 않는 토큰입니다."),
     WRONG_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 이상합니다"),
     UNKNOWN_ERROR(HttpStatus.BAD_REQUEST,"토큰이 유효하지 않습니다."),
-    ACCESS_DENIED(HttpStatus.UNAUTHORIZED,"접근이 거부되었습니다.");
-
+    ACCESS_DENIED(HttpStatus.UNAUTHORIZED,"접근이 거부되었습니다."),
+    FILE_CONVERT_ERROR(HttpStatus.BAD_REQUEST,"파일 변환에 실패했습니다.");
     private final HttpStatus httpStatus;
     private final String detail;
 }
