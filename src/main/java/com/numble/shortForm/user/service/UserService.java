@@ -8,7 +8,7 @@ import com.numble.shortForm.user.dto.response.UserResponseDto;
 import com.numble.shortForm.user.entity.Authority;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.jwt.JwtTokenProvider;
-import com.numble.shortForm.user.repository.UserRepository;
+import com.numble.shortForm.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -40,7 +40,7 @@ public class UserService {
     @Transactional
     public ResponseEntity<?> signUp(UserRequestDto.SignUp signUpDto) {
 
-        userRepository.findByEmail(signUpDto.getEmail()).ifPresent( user ->{
+        usersRepository.findByEmail(signUpDto.getEmail()).ifPresent(user ->{
             throw new CustomException(ErrorCode.EXIST_EMAIL_ERROR);
         });
 
@@ -51,14 +51,14 @@ public class UserService {
                 .roles(Collections.singletonList(Authority.ROLE_USER.name()))
                 .build();
 
-        userRepository.save(user);
+        usersRepository.save(user);
         return Response.success("회원가입에 성공했습니다.");
     }
 
 
     public UserResponseDto.TokenInfo login(UserRequestDto.Login loginDto) {
-        userRepository.findByEmail(loginDto.getEmail()).orElseThrow(() ->
-            new CustomException(ErrorCode.NOT_FOUND_USER));
+        Users users = usersRepository.findByEmail(loginDto.getEmail()).orElseThrow(() ->
+                new CustomException(ErrorCode.NOT_FOUND_USER));
 
         // email,password를 사용해 authenticationToken 생성
         UsernamePasswordAuthenticationToken authenticationToken = loginDto.toAuthentication();
@@ -82,7 +82,8 @@ public class UserService {
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
         }
         Authentication authentication = jwtTokenProvider.getAuthentication(reissueDto.getAccessToken());
-
+        log.info("authentication getPrincipal {}",authentication.getPrincipal());
+        log.info("authentication getname {}",authentication.getName());
         String refreshToken =(String) redisTemplate.opsForValue().get("RT:"+authentication.getName());
 
         if (ObjectUtils.isEmpty(refreshToken)) {

@@ -1,9 +1,9 @@
-package com.numble.shortForm.comment.entity;
+package com.numble.shortForm.hashtag.entity;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import javax.persistence.*;
 
@@ -13,11 +13,12 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 @Getter
-public class Comment {
+@ToString
+public class VideoHash {
 
     @Id
+    @Column(name="videoHash_id")
     @GeneratedValue(strategy = IDENTITY)
-    @Column(name = "comment_id")
-    private Long  id;
+    private Long id;
 
 }

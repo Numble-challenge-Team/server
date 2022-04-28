@@ -3,7 +3,7 @@ package com.numble.shortForm.user.service;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.entity.Users;
-import com.numble.shortForm.user.repository.UserRepository;
+import com.numble.shortForm.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailService implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
+        return usersRepository.findByEmail(username)
                 .map(this::createUserDetails)
                 .orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
     }
