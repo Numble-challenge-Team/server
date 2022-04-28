@@ -29,7 +29,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/test").hasRole("USER")
+                .antMatchers("/api/v1/users/test","/api/v1/videos/upload/embedded").hasRole("USER")
                 .anyRequest().permitAll()
                 .and()
                 .exceptionHandling()
