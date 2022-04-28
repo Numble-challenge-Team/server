@@ -2,6 +2,7 @@ package com.numble.shortForm.user.entity;
 
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
+import com.numble.shortForm.video.entity.Video;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,6 +36,9 @@ public class Users extends BaseTime implements UserDetails {
 
     private String nickname;
 
+    @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
+    private List<Video> videos = new ArrayList<>();
+
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 
@@ -52,6 +56,7 @@ public class Users extends BaseTime implements UserDetails {
                 .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public String getPassword() {

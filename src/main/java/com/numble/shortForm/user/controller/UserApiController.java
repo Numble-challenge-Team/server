@@ -1,26 +1,25 @@
 package com.numble.shortForm.user.controller;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.Response;
 import com.numble.shortForm.response.ResponseDto;
+import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.user.dto.request.TestDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
-import com.numble.shortForm.user.entity.Users;
-import com.numble.shortForm.user.repository.UserRepository;
+import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.user.service.UserService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +29,8 @@ import java.util.Optional;
 public class UserApiController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
+    private final UsersRepository usersRepository;
+    private final AuthenticationFacade authenticationFacade;
 
     @ApiOperation(value = "회원가입",notes = "<big>로그인에 성공하면, accessToken, RefreshToken 반환</big>")
     @ApiResponses({
@@ -79,7 +79,7 @@ public class UserApiController {
             @ApiResponse(code=400,message = "Token 정보가 유효하지 않습니다.",response = ErrorResponse.class,responseContainer = "List")
     })
     @PostMapping("/logout")
-    ResponseEntity<?> logout(@RequestBody UserRequestDto.Logout logoutDto) {
+    public ResponseEntity<?> logout(@RequestBody UserRequestDto.Logout logoutDto) {
         return userService.logout(logoutDto);
     }
 
@@ -92,14 +92,14 @@ public class UserApiController {
     })
     @ApiImplicitParam(name = "email",value = "이메일(json 형식으로 email=\"oz@gamil.com\")")
     @PostMapping("/validation/email")
-    ResponseEntity<?> isValidationEmail(@RequestBody Map<String,String> map) {
+    public ResponseEntity<?> isValidationEmail(@RequestBody Map<String,String> map) {
 
         String email = map.get("email");
         if (email == null) {
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"json의 email의 형식을 확인해주세요");
         }
 
-        userRepository.findByEmail(email).ifPresent( user ->{
+        usersRepository.findByEmail(email).ifPresent(user ->{
             throw new CustomException(ErrorCode.EXIST_EMAIL_ERROR,String.format("[%s]는 존재하는 이메일입니다.",email));
         });
         return Response.success("","존재하지 않는 이메일입니다.",HttpStatus.OK);
@@ -113,13 +113,13 @@ public class UserApiController {
     })
     @ApiImplicitParam(name = "nickname",value = "닉네임(json 형식으로 nickname=\"오즈의마법사\")")
     @PostMapping("/validation/nickname")
-    ResponseEntity<?> isValidationNickname(@RequestBody Map<String,String> map) {
+    public ResponseEntity<?> isValidationNickname(@RequestBody Map<String,String> map) {
         String nickname = map.get("nickname");
         if (nickname == null) {
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"json의 nickname의 형식을 확인해주세요");
         }
 
-        userRepository.findByNickname(nickname).ifPresent(user ->{
+        usersRepository.findByNickname(nickname).ifPresent(user ->{
             throw new CustomException(ErrorCode.EXIST_NICKNAME_ERROR,String.format("[%s]는 존재하는 닉네임입니다.",nickname));
         });
 
@@ -127,4 +127,23 @@ public class UserApiController {
     }
 
 
+    @GetMapping("/test")
+    public ResponseEntity testAuth() {
+        Authentication authentication = authenticationFacade.getAuthentication();
+        log.info("authentication {}",authentication.getDetails());
+        System.out.println(authentication.getPrincipal());
+        System.out.println(authentication.getName());
+        return ResponseEntity.ok().body("");
+    }
+
+
+    @PostMapping("/formTest")
+    public TestDto form(@ModelAttribute TestDto testDto) {
+
+        log.info("test {} {}",testDto.getTags().toString(),testDto.getDescription());
+        TestDto test = new TestDto();
+        test.setDescription(testDto.getDescription());
+        test.setTags(testDto.getTags());
+        return test;
+    }
 }
