@@ -13,7 +13,7 @@ plugins {
 
 group = 'com.numble'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = "11"
 
 configurations {
 	compileOnly {
@@ -73,3 +73,4 @@ configurations {
 compileQuerydsl {
 	options.annotationProcessorPath = configurations.querydsl
 }
+targetCompatibility = JavaVersion.VERSION_11
