@@ -39,6 +39,8 @@ public class Video extends BaseTime {
 
     private Long view;
 
+    private String duration;
+
     @GeneratedValue(strategy = IDENTITY)
     private Long showId;
 
@@ -55,6 +57,8 @@ public class Video extends BaseTime {
     @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
     private List<VideoHash> videoHashes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
+    private List<VideoLike> videoLikes = new ArrayList<>();
 
     @Builder
     public Video(String title, UploadThumbNail uploadThumbNail, String videoUrl, String context, VideoType videoType, boolean isBlock, Users users) {

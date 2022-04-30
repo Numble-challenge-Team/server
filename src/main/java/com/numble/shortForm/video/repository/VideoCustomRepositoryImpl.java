@@ -1,5 +1,6 @@
 package com.numble.shortForm.video.repository;
 
+import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.user.entity.QUsers;
 import com.numble.shortForm.video.dto.response.QVideoResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
@@ -30,7 +31,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.uploadThumbNail,
                         video.isBlock,
                         video.view,
-                        video.created_at
+                        video.created_at,
+                        video.duration
                 )).from(video)
                 .leftJoin(video.users,users)
                 .orderBy(video.showId.desc())
@@ -40,5 +42,32 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
         return new PageImpl<>(fetch,pageable,fetch.size());
     }
 
+    @Override
+    public VideoResponseDto retrieveDetail(Long videoId) {
+        return null;
+    }
 
+    @Override
+    public Page<VideoResponseDto> retrieveMyVideo(String userEmail, PageDto pageDto) {
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.uploadThumbNail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration
+                )).from(video)
+                .leftJoin(video.users,users)
+                .orderBy(video.created_at.desc())
+//                .where(users.email.eq(userEmail))
+                .offset(pageDto.getOffset()* pageDto.getPage())
+                .limit(pageDto.getSize())
+                .fetch();
+        return new PageImpl<>(fetch,Pageable.ofSize(pageDto.getPage()),fetch.size());
+
+    }
 }

@@ -32,8 +32,10 @@ public class VideoResponseDto {
 
     private LocalDate created_at;
 
+    private String duration;
+
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, UploadThumbNail uploadThumbNail, boolean isBlock, Long view, LocalDateTime created_at) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, UploadThumbNail uploadThumbNail, boolean isBlock, Long view, LocalDateTime created_at,String duration) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
