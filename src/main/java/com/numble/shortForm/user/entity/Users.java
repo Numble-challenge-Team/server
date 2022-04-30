@@ -3,6 +3,7 @@ package com.numble.shortForm.user.entity;
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.video.entity.Video;
+import com.numble.shortForm.video.entity.VideoLike;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,6 +39,9 @@ public class Users extends BaseTime implements UserDetails {
 
     @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
     private List<Video> videos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
+    private List<VideoLike> videoLikes  = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();

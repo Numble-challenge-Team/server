@@ -1,11 +1,8 @@
-package com.numble.shortForm.hashtag.entity;
+package com.numble.shortForm.video.entity;
 
 import com.numble.shortForm.user.entity.Users;
-import com.numble.shortForm.video.entity.Video;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import javax.persistence.*;
 
@@ -15,27 +12,24 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 @Getter
-@ToString
-public class VideoHash {
+public class VideoLike {
 
     @Id
-    @Column(name="videoHash_id")
     @GeneratedValue(strategy = IDENTITY)
+    @Column(name = "videoLike_id")
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id")
+    private Users users;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_id")
     private Video video;
 
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "hashtag_id")
-    private HashTag hashTag;
-
-
-    public VideoHash(Video video, HashTag hashTag) {
+    public VideoLike(Users users, Video video) {
+        this.users = users;
         this.video = video;
-        this.hashTag = hashTag;
     }
 }

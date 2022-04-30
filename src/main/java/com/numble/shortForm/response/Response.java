@@ -26,7 +26,7 @@ public class Response {
         @ApiModelProperty(example = "success")
         private String result;
 
-        @ApiModelProperty(example = "가입에 성공했습니다.")
+        @ApiModelProperty(example = "성공")
         private String message;
 
         @ApiModelProperty(example = "{accessToke =adsdfsvewr, refreshtoken=sfsdfsdffsdf}")
