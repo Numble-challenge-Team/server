@@ -52,9 +52,9 @@ public class VideoApiController {
     })
     @PostMapping("/upload/embedded")
     public ResponseEntity<?> uploadEmbeddedVideo(@ModelAttribute EmbeddedVideoRequestDto embeddedVideoRequestDto) throws IOException {
-        log.info("접속");
+
         String userEmail = authenticationFacade.getAuthentication().getName();
-        log.info("find email Email {}", userEmail);
+
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(() ->
                 new CustomException(ErrorCode.NOT_FOUND_USER, "해당 유저 토큰에 해당하는 정보를 찾을수가 없습니다."));
 
