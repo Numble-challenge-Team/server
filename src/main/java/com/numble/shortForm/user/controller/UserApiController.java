@@ -58,7 +58,6 @@ public class UserApiController {
                 .data(tokenInfo)
                 .message("로그인 성공")
                 .build();
-//        return response.success(tokenInfo,"로그인 완료",HttpStatus.OK);
     }
 
 
@@ -127,6 +126,24 @@ public class UserApiController {
     }
 
 
+    @ApiOperation(value = "회원 탈퇴, 토큰필요")
+    @DeleteMapping("/sign-out")
+    public ResponseEntity signOut() {
+        String userEmail = authenticationFacade.getAuthentication().getName();
+        if(userEmail.equals("anonymousUser")){
+            throw new CustomException(ErrorCode.NOT_FOUND_USER);
+        }
+        log.info("userEmail {}",userEmail);
+        userService.signOut(userEmail);
+        return Response.success("true","탈퇴되없습니다.",HttpStatus.OK);
+    }
+
+
+//    @PutMapping("/change")
+//    public ResponseEntity changeInfo() {
+//
+//    }
+
     @GetMapping("/test")
     public ResponseEntity testAuth() {
         Authentication authentication = authenticationFacade.getAuthentication();
@@ -136,14 +153,4 @@ public class UserApiController {
         return ResponseEntity.ok().body("");
     }
 
-
-    @PostMapping("/formTest")
-    public TestDto form(@ModelAttribute TestDto testDto) {
-
-        log.info("test {} {}",testDto.getTags().toString(),testDto.getDescription());
-        TestDto test = new TestDto();
-        test.setDescription(testDto.getDescription());
-        test.setTags(testDto.getTags());
-        return test;
-    }
 }

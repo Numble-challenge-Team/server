@@ -4,6 +4,8 @@ import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.hashtag.entity.HashTag;
 import com.numble.shortForm.hashtag.entity.VideoHash;
+import com.numble.shortForm.hashtag.repository.HashTagRepository;
+import com.numble.shortForm.hashtag.repository.VideoHashRepository;
 import com.numble.shortForm.hashtag.service.HashTagService;
 import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.upload.S3Uploader;
@@ -18,6 +20,7 @@ import com.numble.shortForm.video.entity.VideoType;
 import com.numble.shortForm.video.repository.VideoLikeRepository;
 import com.numble.shortForm.video.repository.VideoRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional
 public class VideoService {
 
@@ -39,6 +43,7 @@ public class VideoService {
     private final S3Uploader s3Uploader;
     private final UsersRepository usersRepository;
     private final HashTagService hashTagService;
+    private final VideoHashRepository videoHashRepository;
 
     public void uploadEmbeddedVideo(EmbeddedVideoRequestDto embeddedVideoRequestDto, Long usersId) throws IOException {
 
@@ -86,7 +91,14 @@ public class VideoService {
 
     public VideoResponseDto retrieveDetail(Long videoId) {
 
-        return  videoRepository.retrieveDetail(videoId);
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+
+         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
+                 .collect(Collectors.toList());
+
+         videoResponseDto.setTags(tags);
+
+        return videoResponseDto;
     }
 
     public Page<VideoResponseDto> retrieveMyVideo(String userEmail, PageDto pageDto) {

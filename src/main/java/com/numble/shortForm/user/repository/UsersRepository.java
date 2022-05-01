@@ -12,4 +12,6 @@ public interface UsersRepository extends JpaRepository<Users,Long>,UserCustomRep
 
 
     Optional<Users> findByNickname(String nickname);
+
+    Integer deleteByEmail(String userEmail);
 }
