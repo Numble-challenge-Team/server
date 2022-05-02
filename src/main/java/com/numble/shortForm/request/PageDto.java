@@ -13,10 +13,8 @@ public class PageDto {
     @ApiModelProperty(value = "가져올 개수",example = "3")
     private int size;
 
-    @ApiModelProperty(value = "offset",example = "5")
-    private int offset;
 
-    @ApiModelProperty(value = "page number  ",example = "2")
+    @ApiModelProperty(value = "page number,0 부터 시작함!  ",example = "2")
     private int page;
 
 }

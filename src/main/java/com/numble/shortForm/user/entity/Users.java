@@ -7,6 +7,7 @@ import com.numble.shortForm.video.entity.VideoLike;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Cascade;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,7 +44,9 @@ public class Users extends BaseTime implements UserDetails {
     @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
     private List<VideoLike> videoLikes  = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(joinColumns = @JoinColumn(name = "USERS_ID"))
+    @Cascade(value = {org.hibernate.annotations.CascadeType.ALL})
     private List<String> roles = new ArrayList<>();
 
     @Builder

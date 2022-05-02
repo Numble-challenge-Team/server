@@ -32,7 +32,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.isBlock,
                         video.view,
                         video.created_at,
-                        video.duration
+                        video.duration,
+                        video.videoLikes.size()
                 )).from(video)
                 .leftJoin(video.users,users)
                 .orderBy(video.showId.desc())
@@ -44,7 +45,23 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
 
     @Override
     public VideoResponseDto retrieveDetail(Long videoId) {
-        return null;
+        return queryFactory.select(new QVideoResponseDto(
+                video.id,
+                users.id,
+                users.nickname,
+                video.showId,
+                video.title,
+                video.uploadThumbNail,
+                video.isBlock,
+                video.view,
+                video.created_at,
+                video.duration,
+                video.videoLikes.size()
+        )).from(video)
+                .leftJoin(video.users,users)
+                .where(video.id.eq(videoId))
+                .fetchOne();
+
     }
 
     @Override
@@ -59,12 +76,13 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.isBlock,
                         video.view,
                         video.created_at,
-                        video.duration
+                        video.duration,
+                        video.videoLikes.size()
                 )).from(video)
                 .leftJoin(video.users,users)
                 .orderBy(video.created_at.desc())
-//                .where(users.email.eq(userEmail))
-                .offset(pageDto.getOffset()* pageDto.getPage())
+                .where(users.email.eq(userEmail))
+                .offset(pageDto.getSize()* pageDto.getPage())
                 .limit(pageDto.getSize())
                 .fetch();
         return new PageImpl<>(fetch,Pageable.ofSize(pageDto.getPage()),fetch.size());

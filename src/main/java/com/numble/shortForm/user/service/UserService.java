@@ -1,7 +1,9 @@
 package com.numble.shortForm.user.service;
 
+import com.numble.shortForm.admin.response.UserAdminResponse;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
+import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.response.Response;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
@@ -11,6 +13,7 @@ import com.numble.shortForm.user.jwt.JwtTokenProvider;
 import com.numble.shortForm.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
+import javax.persistence.EntityManager;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -119,8 +123,18 @@ public class UserService {
         return Response.success("로그아웃 되었습니다.");
     }
 
-    public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
-        return Response.success("회원정보 수정 되었습니다.");
-
+//    public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
+//        return Response.success("회원정보 수정 되었습니다.");
+//
+//    }
+    @Transactional
+    public void signOut(String usersEmail) {
+        Users users = usersRepository.findByEmail(usersEmail).orElseThrow(()->
+                new CustomException(ErrorCode.NOT_FOUND_USER));
+        log.info("users {}",users);
+         usersRepository.delete(users);
     }
+
+
+
 }

@@ -65,15 +65,14 @@ public class VideoApiController {
 
     @ApiOperation(value = "모든 동영상 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로 /  기본값 5")
     @ApiResponses({
-            @ApiResponse(code = 200, message = "동영상 조회 완료", response = Page.class),
             @ApiResponse(code = 209, message = "content 내부  동영상 구조", response = VideoResponseDto.class),
             @ApiResponse(code = 500, message = "서버 에러", response = ServerErrorResponse.class, responseContainer = "List")
     })
     @GetMapping("/retrieve/all")
-    public Page retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
+    public Page<VideoResponseDto> retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
 
-        Page<VideoResponseDto> videoResponseDtos = videoService.retrieveAll(Pageable.ofSize(size));
-        return videoResponseDtos;
+        return videoService.retrieveAll(Pageable.ofSize(size));
+
 
     }
 
@@ -87,15 +86,20 @@ public class VideoApiController {
 
         return ResponseEntity.ok().body(ip);
     }
-
+    @ApiOperation(value = "비디오 상세페이지", notes = "비디오 Id 값을 기준으로 조회")
     @GetMapping("/retrieve/{videoId}")
     public VideoResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
-        //        videoService.retrieveDetail(videoId);
+        String userEmail = authenticationFacade.getAuthentication().getName();
+        String ip = getIp();
+        return   videoService.retrieveDetail(videoId,ip,userEmail);
 
-        return null;
+
     }
 
+
+
+    @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
     public Page<VideoResponseDto> retrieveMyVideo(@ModelAttribute PageDto pageDto) {
         String userEmail = authenticationFacade.getAuthentication().getName();
@@ -104,12 +108,22 @@ public class VideoApiController {
         return videoService.retrieveMyVideo(userEmail,pageDto);
     }
 
+
+    @ApiOperation(value = "비디오 좋아요버튼", notes = "좋아요 생성,혹은 제거 메시지가 표시됌")
     @PostMapping("/like/{videoId}")
     public ResponseEntity requestLikeVideo(@PathVariable(name = "videoId")Long videoId ) {
         String userEmail = authenticationFacade.getAuthentication().getName();
 
         boolean bol = videoService.requestLikeVideo(userEmail, videoId);
         String message = bol == true ? "좋아요 생성" : "좋아죠 제거";
-        return Response.success(message);
+        return Response.success(bol,message,HttpStatus.OK);
+    }
+    // ip 조회
+     private String getIp() {
+        HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        String ip = req.getHeader("X-FORWARDED-FOR");
+        if (ip == null)
+            ip = req.getRemoteAddr();
+        return ip;
     }
 }
