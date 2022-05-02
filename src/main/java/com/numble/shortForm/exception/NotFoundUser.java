@@ -1,10 +1,8 @@
 package com.numble.shortForm.exception;
 
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.ResponseEntity;
 
@@ -13,19 +11,19 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @Builder
-@RequiredArgsConstructor
-public class ErrorResponse {
+public class NotFoundUser {
 
     private final OffsetDateTime time = OffsetDateTime.now();
-    @ApiModelProperty(example = "403")
+
+    @ApiModelProperty(example = "404")
     private final int status;
-    @ApiModelProperty(example = "FORBIDDEN_ACCESS")
+    @ApiModelProperty(example = "ACCESS_DENIED")
     private final String error;
-    @ApiModelProperty(example = "BAD_REQUEST_PARAM")
+    @ApiModelProperty(example = "NOT_FOUND_USER")
     private final String code;
-    @ApiModelProperty(example = "권한이 없습니다.")
+    @ApiModelProperty(example = "다시한번 확인하세요.")
     private final String detail;
-    @ApiModelProperty(example = "토큰이 유효하지 않습니다.")
+    @ApiModelProperty(example = "유저를 찾을수 없습니다.")
     private final String message;
 
     public static ResponseEntity<ErrorResponse> toResponseEntity(CustomException e) {

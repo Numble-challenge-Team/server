@@ -1,31 +1,28 @@
 package com.numble.shortForm.exception;
 
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.ToString;
 import org.springframework.http.ResponseEntity;
 
 import java.time.OffsetDateTime;
 
 @Getter
-@Setter
+@ToString
 @Builder
-@RequiredArgsConstructor
-public class ErrorResponse {
-
+public class ServerErrorResponse {
     private final OffsetDateTime time = OffsetDateTime.now();
-    @ApiModelProperty(example = "403")
+
+    @ApiModelProperty(example = "500")
     private final int status;
-    @ApiModelProperty(example = "FORBIDDEN_ACCESS")
+    @ApiModelProperty(example = "ACCESS_DENIED")
     private final String error;
-    @ApiModelProperty(example = "BAD_REQUEST_PARAM")
+    @ApiModelProperty(example = "SERVER_ERROR")
     private final String code;
-    @ApiModelProperty(example = "권한이 없습니다.")
+    @ApiModelProperty(example = "관리자에게 문의하세요.")
     private final String detail;
-    @ApiModelProperty(example = "토큰이 유효하지 않습니다.")
+    @ApiModelProperty(example = "서버 에러입니다.")
     private final String message;
 
     public static ResponseEntity<ErrorResponse> toResponseEntity(CustomException e) {

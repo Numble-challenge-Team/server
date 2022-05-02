@@ -16,7 +16,20 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-      url: jdbc:mysql://localhost:3306/comedb
+      url: jdbc:mysql://localhost:3306/video
       username: root
       password: 6568
       driver-class-name: com.mysql.cj.jdbc.Driver
+
+  redis:
+    host: localhost
+    port: 6379
+
+
+
+jwt:
+  secret: VlwEyVBsYt9V7zq57TejMnVUyzblYcfPQye08f7MGVA9XkHN
+springfox:
+  documentation:
+    swagger:
+        use-model-v3: false
