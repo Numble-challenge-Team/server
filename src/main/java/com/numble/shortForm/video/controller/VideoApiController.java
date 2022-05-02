@@ -90,10 +90,15 @@ public class VideoApiController {
     @GetMapping("/retrieve/{videoId}")
     public VideoResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
-        return   videoService.retrieveDetail(videoId);
+        String userEmail = authenticationFacade.getAuthentication().getName();
+        String ip = getIp();
+        return   videoService.retrieveDetail(videoId,ip,userEmail);
 
 
     }
+
+
+
     @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
     public Page<VideoResponseDto> retrieveMyVideo(@ModelAttribute PageDto pageDto) {
@@ -112,5 +117,13 @@ public class VideoApiController {
         boolean bol = videoService.requestLikeVideo(userEmail, videoId);
         String message = bol == true ? "좋아요 생성" : "좋아죠 제거";
         return Response.success(bol,message,HttpStatus.OK);
+    }
+    // ip 조회
+     private String getIp() {
+        HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        String ip = req.getHeader("X-FORWARDED-FOR");
+        if (ip == null)
+            ip = req.getRemoteAddr();
+        return ip;
     }
 }

@@ -133,16 +133,12 @@ public class UserApiController {
         if(userEmail.equals("anonymousUser")){
             throw new CustomException(ErrorCode.NOT_FOUND_USER);
         }
-        log.info("userEmail {}",userEmail);
         userService.signOut(userEmail);
         return Response.success("true","탈퇴되없습니다.",HttpStatus.OK);
     }
 
 
-//    @PutMapping("/change")
-//    public ResponseEntity changeInfo() {
-//
-//    }
+
 
     @GetMapping("/test")
     public ResponseEntity testAuth() {

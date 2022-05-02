@@ -123,10 +123,10 @@ public class UserService {
         return Response.success("로그아웃 되었습니다.");
     }
 
-    public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
-        return Response.success("회원정보 수정 되었습니다.");
-
-    }
+//    public ResponseEntity<?> change(UserRequestDto.Change changeDto) {
+//        return Response.success("회원정보 수정 되었습니다.");
+//
+//    }
     @Transactional
     public void signOut(String usersEmail) {
         Users users = usersRepository.findByEmail(usersEmail).orElseThrow(()->

@@ -24,11 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -44,6 +46,7 @@ public class VideoService {
     private final UsersRepository usersRepository;
     private final HashTagService hashTagService;
     private final VideoHashRepository videoHashRepository;
+    private final RedisTemplate redisTemplate;
 
     public void uploadEmbeddedVideo(EmbeddedVideoRequestDto embeddedVideoRequestDto, Long usersId) throws IOException {
 
@@ -68,6 +71,7 @@ public class VideoService {
                 .videoType(VideoType.embedded)
                 .isBlock(false)
                 .users(users)
+                .duration(embeddedVideoRequestDto.getDuration())
                 .build();
         Video createdVideo = videoRepository.save(video);
 
@@ -89,13 +93,20 @@ public class VideoService {
         return videoRepository.retrieveAll(pageable);
     }
 
-    public VideoResponseDto retrieveDetail(Long videoId) {
+    // 비디오 상세조회
+    public VideoResponseDto retrieveDetail(Long videoId,String ip,String userEmail) {
+
+        String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
+        if (IsExistRedis == null) {
+            videoRepository.updateView(videoId);
+            redisTemplate.opsForValue().set(videoId+"/"+ip,userEmail,5L,TimeUnit.MINUTES);
+        }
+
 
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
 
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
-
          videoResponseDto.setTags(tags);
 
         return videoResponseDto;

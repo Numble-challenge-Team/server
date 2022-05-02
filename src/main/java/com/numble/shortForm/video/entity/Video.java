@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 
 import javax.persistence.*;
 
@@ -16,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static javax.persistence.GenerationType.IDENTITY;
+import static javax.persistence.GenerationType.SEQUENCE;
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity
@@ -37,18 +40,17 @@ public class Video extends BaseTime {
 
     private String context;
 
-    private Long view;
+    private Long view=0L;
 
+    @Column(nullable = false)
     private String duration;
 
-    @GeneratedValue(strategy = IDENTITY)
     private Long showId;
 
     @Enumerated(EnumType.STRING)
     private VideoType videoType;
 
-    @ColumnDefault("false")
-    private boolean isBlock;
+    private boolean isBlock=false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
@@ -61,7 +63,7 @@ public class Video extends BaseTime {
     private List<VideoLike> videoLikes = new ArrayList<>();
 
     @Builder
-    public Video(String title, UploadThumbNail uploadThumbNail, String videoUrl, String context, VideoType videoType, boolean isBlock, Users users) {
+    public Video(String title, UploadThumbNail uploadThumbNail, String videoUrl, String context, VideoType videoType, boolean isBlock, Users users,String duration) {
         this.title = title;
         this.uploadThumbNail = uploadThumbNail;
         this.videoUrl = videoUrl;
@@ -69,6 +71,7 @@ public class Video extends BaseTime {
         this.videoType = videoType;
         this.isBlock = isBlock;
         this.users = users;
+        this.duration =duration;
     }
 
     public void addVideoHash(List<VideoHash> tags) {

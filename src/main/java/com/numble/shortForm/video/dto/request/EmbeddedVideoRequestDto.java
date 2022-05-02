@@ -23,4 +23,6 @@ public class EmbeddedVideoRequestDto {
 
     private List<String> tags;
 
+    private String duration;
+
 }
