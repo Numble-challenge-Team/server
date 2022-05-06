@@ -2,7 +2,9 @@ package com.numble.shortForm.hashtag.service;
 
 import com.numble.shortForm.hashtag.entity.HashTag;
 import com.numble.shortForm.hashtag.repository.HashTagRepository;
+import com.numble.shortForm.hashtag.repository.VideoHashRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,6 +15,12 @@ import java.util.List;
 public class HashTagService {
 
     private final HashTagRepository hashTagRepository;
+    private final VideoHashRepository videoHashRepository;
+
+    public void getTagByConcern(List<Long> recordVideoList) {
+
+//        videoHashRepository.findAllByVideoIdIn(recordVideoList).stream().map(obj -> obj.get);
+    }
 
 
     public List<HashTag> createTag(List<String> tags) {

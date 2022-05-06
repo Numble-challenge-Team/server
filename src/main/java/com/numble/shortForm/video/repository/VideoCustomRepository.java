@@ -15,4 +15,8 @@ public interface VideoCustomRepository {
     VideoResponseDto retrieveDetail(Long videoId);
 
     Page<VideoResponseDto> retrieveMyVideo(String userEmail, PageDto pageDto);
+
+    List<VideoResponseDto> getVideoByTag(Long videoId);
+
+    List<VideoResponseDto> searchVideoQuery(String query,Pageable pageable);
 }
