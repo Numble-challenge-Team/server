@@ -26,9 +26,10 @@ public class VideoSort {
                     case "likes":
                         return new OrderSpecifier<>(direction,video.videoLikes.size());
 
+
                 }
             }
         }
-        return null;
+        return new OrderSpecifier<>(Order.DESC,video.videoLikes.size());
     }
 }

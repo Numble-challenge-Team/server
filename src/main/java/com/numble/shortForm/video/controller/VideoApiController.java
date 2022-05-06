@@ -79,9 +79,14 @@ public class VideoApiController {
     @GetMapping("/main")
     public Page<VideoResponseDto> mainVideoList(Pageable pageable) {
 
-        log.info("pageable {}",pageable);
-//        videoService.
-        return null;
+        Integer userId = retrieveUserId();
+        if (userId == null) {
+            log.info("로그인 안됌");
+            return videoService.retrieveMainVideoListNotLogin(pageable);
+        }
+
+        return videoService.retrieveMainVideoList(pageable,userId.longValue());
+
     }
 
 
@@ -89,18 +94,23 @@ public class VideoApiController {
     @GetMapping("/retrieve/{videoId}")
     public VideoResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
-        String userEmail = authenticationFacade.getAuthentication().getName();
         String ip = getIp();
-        return   videoService.retrieveDetail(videoId,ip,userEmail);
+        Integer userId = retrieveUserId();
+
+        if (userId == null) {
+            return videoService.retrieveDetailNotLogin(videoId,ip);
+        }
+
+        return  videoService.retrieveDetail(videoId,ip,userId.longValue());
     }
 
     @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
-    public Page<VideoResponseDto> retrieveMyVideo(@ModelAttribute PageDto pageDto) {
+    public Page<VideoResponseDto> retrieveMyVideo(Pageable pageable) {
         String userEmail = authenticationFacade.getAuthentication().getName();
 
 
-        return videoService.retrieveMyVideo(userEmail,pageDto);
+        return videoService.retrieveMyVideo(userEmail,pageable);
     }
 
 
@@ -118,21 +128,17 @@ public class VideoApiController {
     @GetMapping("/search")
     public List<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
 
-        log.info("pageable sort {}",pageable.getSort());
-        log.info("pageable get offset {}",pageable.getOffset());
-        log.info("pageable get page {}",pageable.getPageSize());
-        log.info("pageable get pagenumber {}",pageable.getPageNumber());
 
         List<VideoResponseDto> fetch=videoService.searchVideoQuery(query,pageable);
         return fetch;
     }
 
 
-    @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환")
+    @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
     @GetMapping("/concernVideo/{videoId}")
-    public List<VideoResponseDto> getConcernVideo(@ModelAttribute PageDto pageDto,@PathVariable("videoId")Long videoId ) {
+    public List<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
         String userEmail = authenticationFacade.getAuthentication().getName();
-        videoService.retrieveConcernVideos(pageDto,userEmail,videoId);
+        videoService.retrieveConcernVideos(pageable,userEmail,videoId);
         return null;
     }
 
@@ -143,5 +149,16 @@ public class VideoApiController {
         if (ip == null)
             ip = req.getRemoteAddr();
         return ip;
+    }
+    // userid 조회
+    private Integer retrieveUserId() {
+        String userEmail = authenticationFacade.getAuthentication().getName();
+      if(userEmail.equals("anonymousUser")){
+          return null;
+      }
+            Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
+                throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
+            });
+            return users.getId().intValue();
     }
 }

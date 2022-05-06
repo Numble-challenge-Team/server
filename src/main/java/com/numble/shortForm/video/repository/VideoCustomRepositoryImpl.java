@@ -4,6 +4,7 @@ import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.user.entity.QUsers;
 import com.numble.shortForm.video.dto.response.QVideoResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
+import com.numble.shortForm.video.entity.VideoLike;
 import com.numble.shortForm.video.sort.VideoSort;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -47,6 +48,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
 
     @Override
     public VideoResponseDto retrieveDetail(Long videoId) {
+
         return queryFactory.select(new QVideoResponseDto(
                 video.id,
                 users.id,
@@ -60,6 +62,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 video.duration,
                 video.videoLikes.size(),
                 video.description
+
         )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.id.eq(videoId))
@@ -68,7 +71,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
     }
 
     @Override
-    public Page<VideoResponseDto> retrieveMyVideo(String userEmail, PageDto pageDto) {
+    public Page<VideoResponseDto> retrieveMyVideo(String userEmail, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
@@ -87,10 +90,11 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 .leftJoin(video.users,users)
                 .orderBy(video.created_at.desc())
                 .where(users.email.eq(userEmail))
-                .offset(pageDto.getSize()* pageDto.getPage())
-                .limit(pageDto.getSize())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(VideoSort.sort(pageable))
                 .fetch();
-        return new PageImpl<>(fetch,Pageable.ofSize(pageDto.getPage()),fetch.size());
+        return new PageImpl<>(fetch,pageable,fetch.size());
 
     }
 
@@ -126,5 +130,54 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 .fetch();
 
         return fetch;
+    }
+
+    @Override
+    public Page<VideoResponseDto> retrieveMainVideo(Pageable pageable) {
+
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.uploadThumbNail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description
+                )).from(video)
+                .leftJoin(video.users, users)
+                .orderBy(VideoSort.sort(pageable))
+                .fetch();
+
+        return new PageImpl<>(fetch,pageable,fetch.size());
+    }
+
+    @Override
+    public Page<VideoResponseDto> retrieveMainVideoNotLogin(Pageable pageable) {
+
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.uploadThumbNail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description,
+                        video.isNull()
+                )).from(video)
+                .leftJoin(video.users, users)
+                .orderBy(VideoSort.sort(pageable))
+                .fetch();
+
+        return new PageImpl<>(fetch,pageable,fetch.size());
     }
 }

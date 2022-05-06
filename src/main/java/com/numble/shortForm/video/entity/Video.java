@@ -28,7 +28,7 @@ public class Video extends BaseTime {
     private String title;
 
     @Embedded
-    private UploadThumbNail uploadThumbNail;
+    private Thumbnail thumbnail;
 
     private String videoUrl;
 
@@ -57,9 +57,9 @@ public class Video extends BaseTime {
     private List<VideoLike> videoLikes = new ArrayList<>();
 
     @Builder
-    public Video(String title, UploadThumbNail uploadThumbNail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration) {
+    public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration) {
         this.title = title;
-        this.uploadThumbNail = uploadThumbNail;
+        this.thumbnail = thumbnail;
         this.videoUrl = videoUrl;
         this.description = description;
         this.videoType = videoType;
