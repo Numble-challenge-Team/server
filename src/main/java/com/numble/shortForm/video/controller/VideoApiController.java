@@ -29,6 +29,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -72,40 +73,44 @@ public class VideoApiController {
     public Page<VideoResponseDto> retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
 
         return videoService.retrieveAll(Pageable.ofSize(size));
+    }
 
+
+    @GetMapping("/main")
+    public Page<VideoResponseDto> mainVideoList(Pageable pageable) {
+
+        Integer userId = retrieveUserId();
+        if (userId == null) {
+            log.info("로그인 안됌");
+            return videoService.retrieveMainVideoListNotLogin(pageable);
+        }
+
+        return videoService.retrieveMainVideoList(pageable,userId.longValue());
 
     }
 
-    @GetMapping("/ip")
-    public ResponseEntity apiCheck() {
-        String userEmail = authenticationFacade.getAuthentication().getName();
-        HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String ip = req.getHeader("X-FORWARDED-FOR");
-        if (ip == null)
-            ip = req.getRemoteAddr();
 
-        return ResponseEntity.ok().body(ip);
-    }
     @ApiOperation(value = "비디오 상세페이지", notes = "비디오 Id 값을 기준으로 조회")
     @GetMapping("/retrieve/{videoId}")
     public VideoResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
-        String userEmail = authenticationFacade.getAuthentication().getName();
         String ip = getIp();
-        return   videoService.retrieveDetail(videoId,ip,userEmail);
+        Integer userId = retrieveUserId();
 
+        if (userId == null) {
+            return videoService.retrieveDetailNotLogin(videoId,ip);
+        }
 
+        return  videoService.retrieveDetail(videoId,ip,userId.longValue());
     }
-
-
 
     @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
-    public Page<VideoResponseDto> retrieveMyVideo(@ModelAttribute PageDto pageDto) {
+    public Page<VideoResponseDto> retrieveMyVideo(Pageable pageable) {
         String userEmail = authenticationFacade.getAuthentication().getName();
 
 
-        return videoService.retrieveMyVideo(userEmail,pageDto);
+        return videoService.retrieveMyVideo(userEmail,pageable);
     }
 
 
@@ -118,6 +123,25 @@ public class VideoApiController {
         String message = bol == true ? "좋아요 생성" : "좋아죠 제거";
         return Response.success(bol,message,HttpStatus.OK);
     }
+
+    @ApiOperation(value = "비디오 검색", notes = "검색기능, 현재 제목과, description 조회(해시태그 포함예정)")
+    @GetMapping("/search")
+    public List<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
+
+
+        List<VideoResponseDto> fetch=videoService.searchVideoQuery(query,pageable);
+        return fetch;
+    }
+
+
+    @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
+    @GetMapping("/concernVideo/{videoId}")
+    public List<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
+        String userEmail = authenticationFacade.getAuthentication().getName();
+        videoService.retrieveConcernVideos(pageable,userEmail,videoId);
+        return null;
+    }
+
     // ip 조회
      private String getIp() {
         HttpServletRequest req = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -125,5 +149,16 @@ public class VideoApiController {
         if (ip == null)
             ip = req.getRemoteAddr();
         return ip;
+    }
+    // userid 조회
+    private Integer retrieveUserId() {
+        String userEmail = authenticationFacade.getAuthentication().getName();
+      if(userEmail.equals("anonymousUser")){
+          return null;
+      }
+            Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
+                throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
+            });
+            return users.getId().intValue();
     }
 }
