@@ -11,11 +11,11 @@ import javax.persistence.Embeddable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UploadThumbNail {
 
-    private String uploadThumbName;
+    private String uploadThumbUrl;
     private String storeThumbName;
 
-    public UploadThumbNail(String uploadThumbName, String storeThumbName) {
-        this.uploadThumbName = uploadThumbName;
+    public UploadThumbNail(String uploadThumbUrl, String storeThumbName) {
+        this.uploadThumbUrl = uploadThumbUrl;
         this.storeThumbName = storeThumbName;
     }
 }

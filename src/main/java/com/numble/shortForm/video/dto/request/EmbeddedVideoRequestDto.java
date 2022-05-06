@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.util.List;
 
 @Getter
@@ -17,12 +16,12 @@ public class EmbeddedVideoRequestDto {
 
     private String videoUrl;
 
-    private String context;
+    private String description;
 
     private MultipartFile thumbNail;
 
     private List<String> tags;
 
-    private String duration;
+    private Long duration;
 
 }
