@@ -43,8 +43,8 @@ public class VideoApiController {
     private final AuthenticationFacade authenticationFacade;
     private final UsersRepository usersRepository;
 
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
-    @ApiOperation(value = "임베디드 동영상 업로드", notes = "<big>임베디드 동영상 업로드</big>")
+//    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @ApiOperation(value = "임베디드 동영상 업로드", notes = "(Token 필요)<big>임베디드 동영상 업로드</big>")
     @ApiResponses({
             @ApiResponse(code = 200, message = "동영상 생성 완료", response = Response.class),
             @ApiResponse(code = 403, message = "권한 없음", response = ErrorResponse.class, responseContainer = "List"),
@@ -77,8 +77,10 @@ public class VideoApiController {
 
 
     @GetMapping("/main")
-    public Page<VideoResponseDto> mainVideoList(Pageable pageable) {
-
+    public Page<VideoResponseDto> mainVideoList( Pageable pageable) {
+        System.out.println(pageable.getPageSize());
+        System.out.println(pageable.getOffset());
+        System.out.println(pageable.getPageNumber());
         Integer userId = retrieveUserId();
         if (userId == null) {
             log.info("로그인 안됌");
@@ -104,7 +106,7 @@ public class VideoApiController {
         return  videoService.retrieveDetail(videoId,ip,userId.longValue());
     }
 
-    @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
+    @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "(Token 필요)테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
     public Page<VideoResponseDto> retrieveMyVideo(Pageable pageable) {
         String userEmail = authenticationFacade.getAuthentication().getName();
@@ -114,7 +116,7 @@ public class VideoApiController {
     }
 
 
-    @ApiOperation(value = "비디오 좋아요버튼", notes = "좋아요 생성,혹은 제거 메시지가 표시됌")
+    @ApiOperation(value = "비디오 좋아요버튼", notes = "(Token 필요)좋아요 생성,혹은 제거 메시지가 표시됌")
     @PostMapping("/like/{videoId}")
     public ResponseEntity requestLikeVideo(@PathVariable(name = "videoId")Long videoId ) {
         String userEmail = authenticationFacade.getAuthentication().getName();
@@ -126,20 +128,24 @@ public class VideoApiController {
 
     @ApiOperation(value = "비디오 검색", notes = "검색기능, 현재 제목과, description 조회(해시태그 포함예정)")
     @GetMapping("/search")
-    public List<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
+    public Page<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
 
 
-        List<VideoResponseDto> fetch=videoService.searchVideoQuery(query,pageable);
-        return fetch;
+        return videoService.searchVideoQuery(query,pageable);
+
     }
 
 
     @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
     @GetMapping("/concernVideo/{videoId}")
     public List<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
-        String userEmail = authenticationFacade.getAuthentication().getName();
-        videoService.retrieveConcernVideos(pageable,userEmail,videoId);
-        return null;
+
+        Integer userId = retrieveUserId();
+        if (userId == null) {
+            return videoService.retrieveConcernVideosNotLogin(pageable,videoId);
+        }
+        return videoService.retrieveConcernVideos(pageable,userId.longValue(),videoId);
+
     }
 
     // ip 조회

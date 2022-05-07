@@ -19,7 +19,7 @@ public interface VideoCustomRepository {
 
     List<VideoResponseDto> getVideoByTag(Long videoId);
 
-    List<VideoResponseDto> searchVideoQuery(String query,Pageable pageable);
+    Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable);
 
     Page<VideoResponseDto> retrieveMainVideo(Pageable pageable);
 
