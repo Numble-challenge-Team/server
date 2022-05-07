@@ -3,6 +3,7 @@ package com.numble.shortForm.video.service;
 import com.numble.shortForm.video.entity.RecordVideo;
 import com.numble.shortForm.video.repository.RecordVideoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -20,10 +21,16 @@ public class RecordVideoService {
 
 
     public List<Long> getRecordVideoList(Long videoId, Long userId, Pageable pageable) {
-        Set<Long> collect = recordVideoRepository.findAllByVideoIdAndUserId(videoId, userId,pageable)
-                .stream().map(obj -> obj.getVideoId()).collect(Collectors.toSet());
+        System.out.println("접속");
+        recordVideoRepository.findAllByVideo_IdAndUser_Id(videoId, userId, pageable);
 
-        return new ArrayList<>(collect);
-
+//        for (RecordVideo recordVideo : allByVideoIdAndUserId) {
+//            System.out.println(recordVideo.getVideoId());
+//        }
+//        Set<Long> collect = recordVideoRepository.findAllByVideoIdAndUserId(videoId, userId,pageable)
+//                .stream().map(obj -> obj.getVideoId()).collect(Collectors.toSet());
+//
+//        return new ArrayList<>(collect);
+    return null;
     }
 }

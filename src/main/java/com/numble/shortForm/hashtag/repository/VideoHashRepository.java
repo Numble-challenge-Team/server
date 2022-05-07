@@ -11,4 +11,6 @@ public interface VideoHashRepository extends JpaRepository<VideoHash,Long> {
     List<VideoHash> findAllByVideoId(Long videoId);
 
     List<VideoHash> findAllByVideoIdIn(List<Long> recordVideoList);
+
+    List<VideoHash> findAllByHashTagIdIn(List<Long> tagids);
 }

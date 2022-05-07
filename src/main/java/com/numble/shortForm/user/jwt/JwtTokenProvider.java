@@ -83,9 +83,10 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get(AUTHORITIES_KEY) == null) {
-            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN);
-        }
+        //문제 발생 추후에 수정
+//        if (claims.get(AUTHORITIES_KEY) == null) {
+//            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN);
+//        }
         // claims 에서 권한 정보 가져오기
 
         Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))

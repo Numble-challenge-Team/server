@@ -50,7 +50,7 @@ public class VideoService {
     private final AuthenticationFacade authenticationFacade;
 
     private static final int PAGE_SIZE =5;
-
+    //embedded 영상 업로드
     public void uploadEmbeddedVideo(EmbeddedVideoRequestDto embeddedVideoRequestDto, Long usersId) throws IOException {
 
         Users users = usersRepository.findById(usersId).orElseThrow(()->{
@@ -61,7 +61,7 @@ public class VideoService {
 
         if (embeddedVideoRequestDto.getThumbNail() != null) {
             String url = s3Uploader.uploadFile(embeddedVideoRequestDto.getThumbNail(),"thumbnail");
-            thumbnail = new Thumbnail(embeddedVideoRequestDto.getThumbNail().getOriginalFilename(),url);
+            thumbnail = new Thumbnail(url,embeddedVideoRequestDto.getThumbNail().getOriginalFilename());
         }else{
             thumbnail = new Thumbnail(null,null);
         }
@@ -107,6 +107,7 @@ public class VideoService {
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                 .collect(Collectors.toList());
+
         videoResponseDto.setTags(tags);
         videoResponseDto.setLiked(false);
         return videoResponseDto;
@@ -121,7 +122,6 @@ public class VideoService {
             videoRepository.updateView(videoId);
             redisTemplate.opsForValue().set(videoId+"/"+ip,"true",5L,TimeUnit.MINUTES);
         }
-
 
 
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
@@ -147,6 +147,7 @@ public class VideoService {
     public Page<VideoResponseDto> retrieveMyVideo(String userEmail, Pageable pageable) {
         return videoRepository.retrieveMyVideo(userEmail,pageable);
     }
+
     // 좋아요 요청
     public boolean requestLikeVideo(String userEmail,Long videoId) {
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
@@ -165,21 +166,45 @@ public class VideoService {
     }
 
     //관심 동영상 조회
-    public List<VideoResponseDto> retrieveConcernVideos(Pageable pageable,String userEmail,Long videoId) {
+    public Page<VideoResponseDto> retrieveConcernVideos(Pageable pageable,Long userId,Long videoId) {
 
-        Users users = usersRepository.findByEmail(userEmail).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
+        Users users = usersRepository.findById(userId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
 
+        //사용자가 봤던 비디오 id 리스트 가져옴 5개
         List<Long> recordVideoList = recordVideoService.getRecordVideoList(videoId, users.getId(),PageRequest.of(0,PAGE_SIZE, Sort.by("created_at").descending()));
 
-        hashTagService.getTagByConcern(recordVideoList);
 
-        videoRepository.getVideoByTag(videoId);
+//        for (Long aLong : recordVideoList) {
+//            Video video = videoRepository.findById(aLong).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_VIDEO, "db에러 관리자에게 문의하세요"));
+//            List<VideoHash> videoHashes = video.getVideoHashes();
+//            for (VideoHash videoHash : videoHashes) {
+//                System.out.println(videoHash.getHashTag().getTagName());
+//            }
+//        }
+//
+//        hashTagService.getTagByConcern(recordVideoList);
+//
+//        videoRepository.getVideoByTag(videoId);
 
 
         return null;
     }
-    // 동여상 검색
-    public List<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
+    // 로그인하지 않은 관심영상
+    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId) {
+
+        // videoid 로 tag id 조회
+        List<Long> tagids = videoHashRepository.findAllByVideoId(videoId).stream().map(obj -> obj.getHashTag().getId()).collect(Collectors.toList());
+        // tag조회 한걸로 tag id를 가진 video id 조회
+        List<Long> videoids = videoHashRepository.findAllByHashTagIdIn(tagids).stream().map(obj -> obj.getVideo().getId()).collect(Collectors.toList());
+        // 자기 자신은 제외
+        videoids.remove(videoId);
+
+
+        return videoRepository.retrieveConcernVideo(videoids,pageable);
+    }
+
+        // 동여상 검색
+    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
         return videoRepository.searchVideoQuery(query,pageable);
     }
 

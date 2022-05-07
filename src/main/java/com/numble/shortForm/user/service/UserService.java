@@ -82,9 +82,9 @@ public class UserService {
 
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
 
-        if (jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
-        }
+//        if (jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
+//            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
+//        }
         Authentication authentication = jwtTokenProvider.getAuthentication(reissueDto.getAccessToken());
         log.info("authentication getPrincipal {}",authentication.getPrincipal());
         log.info("authentication getname {}",authentication.getName());

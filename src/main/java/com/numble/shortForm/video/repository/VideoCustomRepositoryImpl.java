@@ -31,7 +31,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         users.nickname,
                         video.showId,
                         video.title,
-                        video.uploadThumbNail,
+                        video.thumbnail,
                         video.isBlock,
                         video.view,
                         video.created_at,
@@ -40,7 +40,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 )).from(video)
                 .leftJoin(video.users,users)
                 .orderBy(video.showId.desc())
-                .offset(pageable.getOffset())
+                .offset(pageable.getPageNumber())
                 .limit(pageable.getPageSize())
                 .fetch();
         return new PageImpl<>(fetch,pageable,fetch.size());
@@ -55,7 +55,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 users.nickname,
                 video.showId,
                 video.title,
-                video.uploadThumbNail,
+                video.thumbnail,
                 video.isBlock,
                 video.view,
                 video.created_at,
@@ -80,7 +80,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         users.nickname,
                         video.showId,
                         video.title,
-                        video.uploadThumbNail,
+                        video.thumbnail,
                         video.isBlock,
                         video.view,
                         video.created_at,
@@ -90,7 +90,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 .leftJoin(video.users,users)
                 .orderBy(video.created_at.desc())
                 .where(users.email.eq(userEmail))
-                .offset(pageable.getOffset())
+                .offset(pageable.getPageNumber())
                 .limit(pageable.getPageSize())
                 .orderBy(VideoSort.sort(pageable))
                 .fetch();
@@ -107,7 +107,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
     }
 
     @Override
-    public List<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
+    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
 
         List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
                         video.id,
@@ -115,21 +115,22 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         users.nickname,
                         video.showId,
                         video.title,
-                        video.uploadThumbNail,
+                        video.thumbnail,
                         video.isBlock,
                         video.view,
                         video.created_at,
                         video.duration,
-                        video.videoLikes.size()
+                        video.videoLikes.size(),
+                        video.description
                 )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.title.contains(query).or(video.description.contains(query)))
-                .offset(pageable.getOffset())
+                .offset(pageable.getPageNumber())
                 .limit(pageable.getPageSize())
                 .orderBy(VideoSort.sort(pageable))
                 .fetch();
 
-        return fetch;
+        return new PageImpl<>(fetch,pageable,fetch.size());
     }
 
     @Override
@@ -141,7 +142,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         users.nickname,
                         video.showId,
                         video.title,
-                        video.uploadThumbNail,
+                        video.thumbnail,
                         video.isBlock,
                         video.view,
                         video.created_at,
@@ -151,6 +152,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
+                .offset(pageable.getPageNumber())
+                .limit(pageable.getPageSize())
                 .fetch();
 
         return new PageImpl<>(fetch,pageable,fetch.size());
@@ -165,7 +168,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         users.nickname,
                         video.showId,
                         video.title,
-                        video.uploadThumbNail,
+                        video.thumbnail,
                         video.isBlock,
                         video.view,
                         video.created_at,
@@ -176,8 +179,36 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
+                .offset(pageable.getPageNumber())
+                .limit(pageable.getPageSize())
                 .fetch();
 
+        return new PageImpl<>(fetch,pageable,fetch.size());
+    }
+
+    @Override
+    public Page<VideoResponseDto> retrieveConcernVideo(List<Long> videoids, Pageable pageable) {
+
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.thumbnail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description
+                )).from(video)
+                .leftJoin(video.users, users)
+                .where(video.id.in(videoids).or(video.isNotNull()))
+                .orderBy(video.videoLikes.size().desc())
+                .offset(pageable.getPageNumber())
+                .limit(pageable.getPageSize())
+                .fetch();
         return new PageImpl<>(fetch,pageable,fetch.size());
     }
 }
