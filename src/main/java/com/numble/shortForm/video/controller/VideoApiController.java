@@ -10,14 +10,18 @@ import com.numble.shortForm.security.AuthenticationFacade;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
+import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
 import com.numble.shortForm.video.service.VideoService;
+import com.numble.shortForm.video.vimeo.Vimeo;
+import com.numble.shortForm.video.vimeo.VimeoException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,8 +30,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +50,37 @@ public class VideoApiController {
     private final AuthenticationFacade authenticationFacade;
     private final UsersRepository usersRepository;
 
-//    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @Value("${vimeo.token}")
+    private String vimeoToken;
+
+
+    @ApiOperation(value = "일반동영상 업로드", notes = "개발중 사용금지")
+    @PostMapping("/upload/normal")
+    public ResponseEntity<?> uploadNormalVideo(@ModelAttribute NormalVideoRequestDto normalVideoRequestDto) throws IOException, VimeoException, InterruptedException {
+        MultipartFile video = normalVideoRequestDto.getVideo();
+
+        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
+
+        if (convertFile.createNewFile()) {
+            log.info("createNewfile success");
+            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+                fos.write(video.getBytes());
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+
+        }
+            Vimeo vimeo = new Vimeo("");
+            Thread.sleep(1000);
+            String videoEndPorint = vimeo.addVideo(convertFile, false);
+            Thread.sleep(5000);
+            convertFile.delete();
+
+            return ResponseEntity.ok(videoEndPorint);
+
+    }
+
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
     @ApiOperation(value = "임베디드 동영상 업로드", notes = "(Token 필요)<big>임베디드 동영상 업로드</big>")
     @ApiResponses({
             @ApiResponse(code = 200, message = "동영상 생성 완료", response = Response.class),
