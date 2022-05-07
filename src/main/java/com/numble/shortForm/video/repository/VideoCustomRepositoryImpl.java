@@ -185,4 +185,30 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
 
         return new PageImpl<>(fetch,pageable,fetch.size());
     }
+
+    @Override
+    public Page<VideoResponseDto> retrieveConcernVideo(List<Long> videoids, Pageable pageable) {
+
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.thumbnail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description
+                )).from(video)
+                .leftJoin(video.users, users)
+                .where(video.id.in(videoids).or(video.isNotNull()))
+                .orderBy(video.videoLikes.size().desc())
+                .offset(pageable.getPageNumber())
+                .limit(pageable.getPageSize())
+                .fetch();
+        return new PageImpl<>(fetch,pageable,fetch.size());
+    }
 }

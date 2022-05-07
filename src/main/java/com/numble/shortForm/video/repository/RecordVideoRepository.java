@@ -8,5 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RecordVideoRepository extends JpaRepository<RecordVideo,Long> {
+
     Page<RecordVideo> findAllByVideoIdAndUserId(Long videoId, Long userId, Pageable pageable);
+
+    Page<RecordVideo> findAllByVideo_IdAndUser_Id(Long videoId, Long userId, Pageable pageable);
 }

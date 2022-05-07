@@ -22,10 +22,11 @@ public class RecordVideoService {
 
     public List<Long> getRecordVideoList(Long videoId, Long userId, Pageable pageable) {
         System.out.println("접속");
-        Page<RecordVideo> allByVideoIdAndUserId = recordVideoRepository.findAllByVideoIdAndUserId(videoId, userId, pageable);
-        for (RecordVideo recordVideo : allByVideoIdAndUserId) {
-            System.out.println(recordVideo.getVideoId());
-        }
+        recordVideoRepository.findAllByVideo_IdAndUser_Id(videoId, userId, pageable);
+
+//        for (RecordVideo recordVideo : allByVideoIdAndUserId) {
+//            System.out.println(recordVideo.getVideoId());
+//        }
 //        Set<Long> collect = recordVideoRepository.findAllByVideoIdAndUserId(videoId, userId,pageable)
 //                .stream().map(obj -> obj.getVideoId()).collect(Collectors.toSet());
 //

@@ -64,23 +64,21 @@ public class VideoApiController {
         return ResponseEntity.ok().body("ok");
     }
 
-    @ApiOperation(value = "모든 동영상 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로 /  기본값 5")
-    @ApiResponses({
-            @ApiResponse(code = 209, message = "content 내부  동영상 구조", response = VideoResponseDto.class),
-            @ApiResponse(code = 500, message = "서버 에러", response = ServerErrorResponse.class, responseContainer = "List")
-    })
-    @GetMapping("/retrieve/all")
-    public Page<VideoResponseDto> retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
-
-        return videoService.retrieveAll(Pageable.ofSize(size));
-    }
+//    @ApiOperation(value = "모든 동영상 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로 /  기본값 5")
+//    @ApiResponses({
+//            @ApiResponse(code = 209, message = "content 내부  동영상 구조", response = VideoResponseDto.class),
+//            @ApiResponse(code = 500, message = "서버 에러", response = ServerErrorResponse.class, responseContainer = "List")
+//    })
+//    @GetMapping("/retrieve/all")
+//    public Page<VideoResponseDto> retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
+//
+//        return videoService.retrieveAll(Pageable.ofSize(size));
+//    }
 
 
     @GetMapping("/main")
     public Page<VideoResponseDto> mainVideoList( Pageable pageable) {
-        System.out.println(pageable.getPageSize());
-        System.out.println(pageable.getOffset());
-        System.out.println(pageable.getPageNumber());
+
         Integer userId = retrieveUserId();
         if (userId == null) {
             log.info("로그인 안됌");
@@ -138,13 +136,13 @@ public class VideoApiController {
 
     @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
     @GetMapping("/concernVideo/{videoId}")
-    public List<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
+    public Page<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
 
-        Integer userId = retrieveUserId();
-        if (userId == null) {
+//        Integer userId = retrieveUserId();
+//        if (userId == null) {
+//        }
             return videoService.retrieveConcernVideosNotLogin(pageable,videoId);
-        }
-        return videoService.retrieveConcernVideos(pageable,userId.longValue(),videoId);
+//        return videoService.retrieveConcernVideos(pageable,userId.longValue(),videoId);
 
     }
 
