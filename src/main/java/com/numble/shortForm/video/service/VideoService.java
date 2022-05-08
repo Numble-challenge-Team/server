@@ -1,5 +1,7 @@
 package com.numble.shortForm.video.service;
 
+import com.numble.shortForm.comment.dto.response.CommentResponse;
+import com.numble.shortForm.comment.service.CommentService;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.hashtag.entity.HashTag;
@@ -11,6 +13,8 @@ import com.numble.shortForm.upload.S3Uploader;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
+import com.numble.shortForm.video.dto.response.Result;
+import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
 import com.numble.shortForm.video.entity.*;
 import com.numble.shortForm.video.repository.RecordVideoRepository;
@@ -48,6 +52,7 @@ public class VideoService {
     private final RecordVideoRepository recordVideoRepository;
     private final RecordVideoService recordVideoService;
     private final AuthenticationFacade authenticationFacade;
+    private final CommentService commentService;
 
     private static final int PAGE_SIZE =5;
     //embedded 영상 업로드
@@ -97,23 +102,28 @@ public class VideoService {
     }
 
     //로그인하지않은 상세피이지
-    public VideoResponseDto retrieveDetailNotLogin(Long videoId, String ip) {
+    public VideoDetailResponseDto retrieveDetailNotLogin(Long videoId, String ip) {
         String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
         if (IsExistRedis == null) {
             videoRepository.updateView(videoId);
             redisTemplate.opsForValue().set(videoId+"/"+ip,"Anonymous User",5L,TimeUnit.MINUTES);
         }
-
-        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+        // 기본적으로 id는 1부터 생성되기때문에, 0에는 일치하는 값이 없다.
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,0L);
         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                 .collect(Collectors.toList());
 
         videoResponseDto.setTags(tags);
         videoResponseDto.setLiked(false);
-        return videoResponseDto;
+
+        return VideoDetailResponseDto.builder()
+                .videoDetail(videoResponseDto)
+                .comments(commentService.testComment(videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,0L))
+                .build();
     }
     // 비디오 상세조회(로그인)
-    public VideoResponseDto retrieveDetail(Long videoId,String ip,Long userId) {
+    public VideoDetailResponseDto retrieveDetail(Long videoId,String ip,Long userId) {
 
 
         // Redis로 5분동안 같은 ip접속시 조회수 제한
@@ -124,7 +134,7 @@ public class VideoService {
         }
 
 
-        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,userId);
 
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
@@ -133,18 +143,23 @@ public class VideoService {
          //좋아요 눌렀는지 확인
         if (searchVideoLike(userId, videoId) != null) {
             videoResponseDto.setLiked(true);
+        }else{
+            videoResponseDto.setLiked(false);
         }
-        videoResponseDto.setLiked(false);
-         // 로그 저장
 
+         // 로그 저장
         recordVideoRepository.save(new RecordVideo(videoId,userId));
 
-        return videoResponseDto;
+        return VideoDetailResponseDto.builder()
+                .videoDetail(videoResponseDto)
+                .comments(commentService.testComment(videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,userId))
+                .build();
     }
 
 
     // 내비디오리스트 조회
-    public Page<VideoResponseDto> retrieveMyVideo(String userEmail, Pageable pageable) {
+    public Result retrieveMyVideo(String userEmail, Pageable pageable) {
         return videoRepository.retrieveMyVideo(userEmail,pageable);
     }
 
@@ -190,7 +205,7 @@ public class VideoService {
         return null;
     }
     // 로그인하지 않은 관심영상
-    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId) {
+    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId,Long userId) {
 
         // videoid 로 tag id 조회
         List<Long> tagids = videoHashRepository.findAllByVideoId(videoId).stream().map(obj -> obj.getHashTag().getId()).collect(Collectors.toList());
@@ -200,17 +215,17 @@ public class VideoService {
         videoids.remove(videoId);
 
 
-        return videoRepository.retrieveConcernVideo(videoids,pageable);
+        return videoRepository.retrieveConcernVideo(videoids,videoId,pageable,userId);
     }
 
         // 동여상 검색
-    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
-        return videoRepository.searchVideoQuery(query,pageable);
+    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable,Long userId) {
+        return videoRepository.searchVideoQuery(query,pageable,userId);
     }
 
     //로그인한 메인 동영상 리스트
     public Page<VideoResponseDto> retrieveMainVideoList(Pageable pageable,Long userId) {
-        Page<VideoResponseDto> videoResponseDtos = videoRepository.retrieveMainVideo(pageable);
+        Page<VideoResponseDto> videoResponseDtos = videoRepository.retrieveMainVideo(pageable,userId);
 
         Users users = usersRepository.findById(userId).orElseThrow(()->
                 new CustomException(ErrorCode.NOT_FOUND_USER));

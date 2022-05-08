@@ -43,6 +43,8 @@ public class VideoResponseDto {
 
     private boolean isLiked;
 
+    private boolean isOwner;
+
     private List<String> tags;
 
     @QueryProjection
@@ -60,7 +62,7 @@ public class VideoResponseDto {
         this.likes = likes.longValue();
     }
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
@@ -73,21 +75,7 @@ public class VideoResponseDto {
         this.duration = duration;
         this.likes = likes.longValue();
         this.description = description;
+        this.isOwner = isOwner;
     }
-    @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description, boolean isLiked) {
-        this.videoId = videoId;
-        this.usersId = usersId;
-        this.nickname = nickname;
-        this.showId = showId;
-        this.title = title;
-        this.thumbnail = thumbnail;
-        this.isBlock = isBlock;
-        this.view = view;
-        this.created_at = created_at.toLocalDate();
-        this.duration = duration;
-        this.likes = likes.longValue();
-        this.description = description;
-        this.isLiked = isLiked;
-    }
+
 }

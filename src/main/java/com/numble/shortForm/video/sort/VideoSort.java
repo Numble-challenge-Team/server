@@ -25,11 +25,12 @@ public class VideoSort {
                         return new OrderSpecifier<>(direction, video.created_at);
                     case "likes":
                         return new OrderSpecifier<>(direction,video.videoLikes.size());
-
+                    case "id":
+                        return new OrderSpecifier<>(direction,video.id);
 
                 }
             }
         }
-        return new OrderSpecifier<>(Order.DESC,video.videoLikes.size());
+        return new OrderSpecifier<>(Order.ASC,video.created_at);
     }
 }
