@@ -11,6 +11,7 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
@@ -40,6 +41,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,12 +63,16 @@ public class VideoApiController {
     @ApiOperation(value = "일반동영상 업로드", notes = "개발중 사용금지")
     @PostMapping("/upload/normal")
     public ResponseEntity<?> uploadNormalVideo(@ModelAttribute NormalVideoRequestDto normalVideoRequestDto) throws IOException, VimeoException, InterruptedException {
-//        MultipartFile video = normalVideoRequestDto.getVideo();
+
+        //        MultipartFile video = normalVideoRequestDto.getVideo();
 //
 //        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
 
         File convertFile = new File(System.getProperty("user.dir") + "/" + "IMG_0318.MOV");
-        System.out.println(convertFile.isFile());
+
+        System.out.println(convertFile.length());
+
+
 //        if (convertFile.createNewFile()) {
 //            log.info("createNewfile success");
 //            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
@@ -79,22 +85,24 @@ public class VideoApiController {
 //            Thread.sleep(10000);
             JSONObject videoInfo = new JSONObject();
             String videoEndPoint=null;
-        try {
-
+//        try {
+//
+//            Vimeo vimeo = new Vimeo(vimeoToken);
+//
+//             videoEndPoint = vimeo.addVideo(convertFile, false);
+//            System.out.println(videoEndPoint);
+////            Thread.sleep(10000);
+//
+////            videoInfo = vimeo.getVideoInfo(videoEndPoint).getJson().getJSONObject("embed");
+////            log.info("vimeo info {}",vimeo.getVideoInfo(videoEndPoint));
+////            Thread.sleep(1000);
+//        } catch (JSONException e) {
+//            log.error("json error : {}",e);
+//        }
+//            convertFile.delete();
             Vimeo vimeo = new Vimeo(vimeoToken);
 
-             videoEndPoint = vimeo.addVideo(convertFile, false);
-            System.out.println(videoEndPoint);
-//            Thread.sleep(10000);
-
-//            videoInfo = vimeo.getVideoInfo(videoEndPoint).getJson().getJSONObject("embed");
-//            log.info("vimeo info {}",vimeo.getVideoInfo(videoEndPoint));
-//            Thread.sleep(1000);
-        } catch (JSONException e) {
-            log.error("json error : {}",e);
-        }
-//            convertFile.delete();
-
+//            vimeo.addVideo
             return ResponseEntity.ok(videoEndPoint);
 
     }
@@ -135,13 +143,13 @@ public class VideoApiController {
     @GetMapping("/main")
     public Page<VideoResponseDto> mainVideoList( Pageable pageable) {
 
-        Integer userId = retrieveUserId();
-        if (userId == null) {
+        Long userId = retrieveUserId();
+        if (userId == 0L) {
             log.info("로그인 안됌");
             return videoService.retrieveMainVideoListNotLogin(pageable);
         }
 
-        return videoService.retrieveMainVideoList(pageable,userId.longValue());
+        return videoService.retrieveMainVideoList(pageable,userId);
 
     }
 
@@ -151,13 +159,13 @@ public class VideoApiController {
     public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
         String ip = getIp();
-        Integer userId = retrieveUserId();
+        Long userId = retrieveUserId();
 
-        if (userId == null) {
+        if (userId == 0L) {
             return videoService.retrieveDetailNotLogin(videoId,ip);
         }
 
-        return videoService.retrieveDetail(videoId,ip,userId.longValue());
+        return videoService.retrieveDetail(videoId,ip,userId);
 
     }
 
@@ -177,8 +185,9 @@ public class VideoApiController {
         String userEmail = authenticationFacade.getAuthentication().getName();
 
         boolean bol = videoService.requestLikeVideo(userEmail, videoId);
-        String message = bol == true ? "좋아요 생성" : "좋아죠 제거";
-        return Response.success(bol,message,HttpStatus.OK);
+
+
+        return ResponseEntity.ok().body(new IsLikeResponse(bol));
     }
 
     @ApiOperation(value = "비디오 검색", notes = "검색기능, 현재 제목과, description 조회(해시태그 포함예정)")
@@ -186,7 +195,7 @@ public class VideoApiController {
     public Page<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
 
 
-        return videoService.searchVideoQuery(query,pageable);
+        return videoService.searchVideoQuery(query,pageable,retrieveUserId());
 
     }
 
@@ -195,10 +204,8 @@ public class VideoApiController {
     @GetMapping("/concernVideo/{videoId}")
     public Page<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
 
-//        Integer userId = retrieveUserId();
-//        if (userId == null) {
-//        }
-            return videoService.retrieveConcernVideosNotLogin(pageable,videoId);
+
+            return videoService.retrieveConcernVideosNotLogin(pageable,videoId,retrieveUserId());
 //        return videoService.retrieveConcernVideos(pageable,userId.longValue(),videoId);
 
     }
@@ -212,14 +219,14 @@ public class VideoApiController {
         return ip;
     }
     // userid 조회
-    private Integer retrieveUserId() {
+    private Long retrieveUserId() {
         String userEmail = authenticationFacade.getAuthentication().getName();
       if(userEmail.equals("anonymousUser")){
-          return null;
+          return 0L;
       }
             Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
                 throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
             });
-            return users.getId().intValue();
+            return users.getId();
     }
 }

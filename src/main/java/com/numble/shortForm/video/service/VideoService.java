@@ -108,8 +108,8 @@ public class VideoService {
             videoRepository.updateView(videoId);
             redisTemplate.opsForValue().set(videoId+"/"+ip,"Anonymous User",5L,TimeUnit.MINUTES);
         }
-
-        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+        // 기본적으로 id는 1부터 생성되기때문에, 0에는 일치하는 값이 없다.
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,0L);
         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                 .collect(Collectors.toList());
 
@@ -119,7 +119,7 @@ public class VideoService {
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
                 .comments(commentService.testComment(videoId))
-                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,0L))
                 .build();
     }
     // 비디오 상세조회(로그인)
@@ -134,7 +134,7 @@ public class VideoService {
         }
 
 
-        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,userId);
 
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
@@ -153,7 +153,7 @@ public class VideoService {
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
                 .comments(commentService.testComment(videoId))
-                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,userId))
                 .build();
     }
 
@@ -205,7 +205,7 @@ public class VideoService {
         return null;
     }
     // 로그인하지 않은 관심영상
-    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId) {
+    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId,Long userId) {
 
         // videoid 로 tag id 조회
         List<Long> tagids = videoHashRepository.findAllByVideoId(videoId).stream().map(obj -> obj.getHashTag().getId()).collect(Collectors.toList());
@@ -215,17 +215,17 @@ public class VideoService {
         videoids.remove(videoId);
 
 
-        return videoRepository.retrieveConcernVideo(videoids,videoId,pageable);
+        return videoRepository.retrieveConcernVideo(videoids,videoId,pageable,userId);
     }
 
         // 동여상 검색
-    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable) {
-        return videoRepository.searchVideoQuery(query,pageable);
+    public Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable,Long userId) {
+        return videoRepository.searchVideoQuery(query,pageable,userId);
     }
 
     //로그인한 메인 동영상 리스트
     public Page<VideoResponseDto> retrieveMainVideoList(Pageable pageable,Long userId) {
-        Page<VideoResponseDto> videoResponseDtos = videoRepository.retrieveMainVideo(pageable);
+        Page<VideoResponseDto> videoResponseDtos = videoRepository.retrieveMainVideo(pageable,userId);
 
         Users users = usersRepository.findById(userId).orElseThrow(()->
                 new CustomException(ErrorCode.NOT_FOUND_USER));
