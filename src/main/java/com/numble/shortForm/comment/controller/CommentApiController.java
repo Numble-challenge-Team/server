@@ -58,7 +58,7 @@ public class CommentApiController {
                     @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
             }
     )
-    @GetMapping("/getcommentList/{videoId}")
+    @GetMapping("/commentList/{videoId}")
     public List<CommentNumberResponse> CommentResponseList(@PathVariable("videoId") Long videoId){
         List<CommentNumberResponse> commentList = commentService.testComment(videoId);
 

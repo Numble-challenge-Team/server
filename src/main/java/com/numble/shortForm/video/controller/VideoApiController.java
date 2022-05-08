@@ -11,6 +11,8 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.response.Result;
+import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
 import com.numble.shortForm.video.service.VideoService;
 import com.numble.shortForm.video.vimeo.Vimeo;
@@ -21,6 +23,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -57,26 +61,41 @@ public class VideoApiController {
     @ApiOperation(value = "일반동영상 업로드", notes = "개발중 사용금지")
     @PostMapping("/upload/normal")
     public ResponseEntity<?> uploadNormalVideo(@ModelAttribute NormalVideoRequestDto normalVideoRequestDto) throws IOException, VimeoException, InterruptedException {
-        MultipartFile video = normalVideoRequestDto.getVideo();
+//        MultipartFile video = normalVideoRequestDto.getVideo();
+//
+//        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
 
-        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
+        File convertFile = new File(System.getProperty("user.dir") + "/" + "IMG_0318.MOV");
+        System.out.println(convertFile.isFile());
+//        if (convertFile.createNewFile()) {
+//            log.info("createNewfile success");
+//            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+//                fos.write(video.getBytes());
+//            } catch (Exception e) {
+//                log.error(e.getMessage());
+//            }
+//
+//        }
+//            Thread.sleep(10000);
+            JSONObject videoInfo = new JSONObject();
+            String videoEndPoint=null;
+        try {
 
-        if (convertFile.createNewFile()) {
-            log.info("createNewfile success");
-            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-                fos.write(video.getBytes());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
+            Vimeo vimeo = new Vimeo(vimeoToken);
 
+             videoEndPoint = vimeo.addVideo(convertFile, false);
+            System.out.println(videoEndPoint);
+//            Thread.sleep(10000);
+
+//            videoInfo = vimeo.getVideoInfo(videoEndPoint).getJson().getJSONObject("embed");
+//            log.info("vimeo info {}",vimeo.getVideoInfo(videoEndPoint));
+//            Thread.sleep(1000);
+        } catch (JSONException e) {
+            log.error("json error : {}",e);
         }
-            Vimeo vimeo = new Vimeo("");
-            Thread.sleep(1000);
-            String videoEndPorint = vimeo.addVideo(convertFile, false);
-            Thread.sleep(5000);
-            convertFile.delete();
+//            convertFile.delete();
 
-            return ResponseEntity.ok(videoEndPorint);
+            return ResponseEntity.ok(videoEndPoint);
 
     }
 
@@ -129,7 +148,7 @@ public class VideoApiController {
 
     @ApiOperation(value = "비디오 상세페이지", notes = "비디오 Id 값을 기준으로 조회")
     @GetMapping("/retrieve/{videoId}")
-    public VideoResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
+    public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
 //        comment 개발후 작성
         String ip = getIp();
         Integer userId = retrieveUserId();
@@ -138,12 +157,13 @@ public class VideoApiController {
             return videoService.retrieveDetailNotLogin(videoId,ip);
         }
 
-        return  videoService.retrieveDetail(videoId,ip,userId.longValue());
+        return videoService.retrieveDetail(videoId,ip,userId.longValue());
+
     }
 
     @ApiOperation(value = "로그인 유저의 모든 비디오 조회", notes = "(Token 필요)테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로")
     @GetMapping("/retrieve/myVideo")
-    public Page<VideoResponseDto> retrieveMyVideo(Pageable pageable) {
+    public Result retrieveMyVideo(Pageable pageable) {
         String userEmail = authenticationFacade.getAuthentication().getName();
 
 
