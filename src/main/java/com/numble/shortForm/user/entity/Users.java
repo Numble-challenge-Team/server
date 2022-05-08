@@ -38,6 +38,9 @@ public class Users extends BaseTime implements UserDetails {
 
     private String nickname;
 
+    @Embedded
+    private ProfileImg profileImg;
+
     @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
     private List<Video> videos = new ArrayList<>();
 

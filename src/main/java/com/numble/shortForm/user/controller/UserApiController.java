@@ -52,6 +52,7 @@ public class UserApiController {
     @PostMapping("/login")
     public ResponseDto login(@RequestBody UserRequestDto.Login loginDto) {
        UserResponseDto.TokenInfo tokenInfo = userService.login(loginDto);
+
         return ResponseDto.builder()
                 .state(200)
                 .result("success")

@@ -4,10 +4,14 @@ import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
+import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.user.repository.UsersRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,11 +40,13 @@ public class JwtTokenProvider {
 
     private final Key key;
 
+    private UsersRepository usersRepository;
 
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey,UsersRepository usersRepository) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.usersRepository = usersRepository;
 
     }
 
@@ -69,11 +75,17 @@ public class JwtTokenProvider {
                 .signWith(key,SignatureAlgorithm.HS256)
                 .compact();
 
+        Users users = usersRepository.findByEmail(authentication.getName())
+                .orElseThrow(() ->new CustomException(ErrorCode.NOT_FOUND_USER, "Error"));
+
         return UserResponseDto.TokenInfo.builder()
                 .grantType(BEARER_TYPE)
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .refreshTokenExpirationTime(REFRESH_TOKEN_EXPIRE_TIME)
+                .nickname(users.getNickname())
+                .userId(users.getId())
+                .profileImg(users.getProfileImg())
                 .build();
     }
 
@@ -83,9 +95,10 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get(AUTHORITIES_KEY) == null) {
-            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN);
-        }
+        //문제 발생 추후에 수정
+//        if (claims.get(AUTHORITIES_KEY) == null) {
+//            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN);
+//        }
         // claims 에서 권한 정보 가져오기
 
         Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))

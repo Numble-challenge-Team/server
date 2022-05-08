@@ -1,7 +1,6 @@
 package com.numble.shortForm.video.dto.response;
 
-import com.numble.shortForm.hashtag.entity.VideoHash;
-import com.numble.shortForm.video.entity.UploadThumbNail;
+import com.numble.shortForm.video.entity.Thumbnail;
 import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,7 +27,7 @@ public class VideoResponseDto {
 
     private String title;
 
-    private UploadThumbNail uploadThumbNail;
+    private Thumbnail thumbnail;
 
     private boolean isBlock;
 
@@ -36,39 +35,47 @@ public class VideoResponseDto {
 
     private LocalDate created_at;
 
-    private String duration;
+    private Long duration;
 
     private Long likes;
+
+    private String description;
+
+    private boolean isLiked;
+
+    private boolean isOwner;
 
     private List<String> tags;
 
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, UploadThumbNail uploadThumbNail, boolean isBlock, Long view, LocalDateTime created_at,String duration,Integer likes) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
         this.showId = showId;
         this.title = title;
-        this.uploadThumbNail = uploadThumbNail;
+        this.thumbnail = thumbnail;
         this.isBlock = isBlock;
         this.view = view;
         this.created_at = created_at.toLocalDate();
         this.duration = duration;
         this.likes = likes.longValue();
     }
+    @QueryProjection
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner) {
+        this.videoId = videoId;
+        this.usersId = usersId;
+        this.nickname = nickname;
+        this.showId = showId;
+        this.title = title;
+        this.thumbnail = thumbnail;
+        this.isBlock = isBlock;
+        this.view = view;
+        this.created_at = created_at.toLocalDate();
+        this.duration = duration;
+        this.likes = likes.longValue();
+        this.description = description;
+        this.isOwner = isOwner;
+    }
 
-//    @QueryProjection
-//    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, UploadThumbNail uploadThumbNail, boolean isBlock, Long view, LocalDateTime created_at, String duration, Integer likes) {
-//        this.videoId = videoId;
-//        this.usersId = usersId;
-//        this.nickname = nickname;
-//        this.showId = showId;
-//        this.title = title;
-//        this.uploadThumbNail = uploadThumbNail;
-//        this.isBlock = isBlock;
-//        this.view = view;
-//        this.created_at = created_at.toLocalDate();
-//        this.duration = duration;
-//        this.likes = likes.longValue();
-//    }
 }

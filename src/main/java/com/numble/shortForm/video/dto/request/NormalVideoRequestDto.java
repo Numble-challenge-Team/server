@@ -10,18 +10,17 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class EmbeddedVideoRequestDto {
+public class NormalVideoRequestDto {
 
     private String title;
 
-    private String videoUrl;
+    private MultipartFile video;
 
     private String description;
 
-    private MultipartFile thumbNail;
+    private MultipartFile thumbnail;
 
     private List<String> tags;
 
     private Long duration;
-
 }
