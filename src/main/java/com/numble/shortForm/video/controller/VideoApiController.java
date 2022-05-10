@@ -11,6 +11,7 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.request.VideoCode;
 import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
@@ -18,6 +19,7 @@ import com.numble.shortForm.video.dto.response.VideoResponseDto;
 import com.numble.shortForm.video.service.VideoService;
 import com.numble.shortForm.video.vimeo.Vimeo;
 import com.numble.shortForm.video.vimeo.VimeoException;
+import com.numble.shortForm.video.vimeo.VimeoResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -30,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,8 +45,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/videos/")
@@ -60,50 +67,78 @@ public class VideoApiController {
     private String vimeoToken;
 
 
-    @ApiOperation(value = "일반동영상 업로드", notes = "개발중 사용금지")
+//    @GetMapping("/check")
+//    public ResponseEntity checkVideo(@Param("url") String url,@Param("keyword") String keyword) throws IOException {
+//
+//        Vimeo vimeo = new Vimeo(vimeoToken);
+//        VimeoResponse videoInfo = vimeo.getVideoInfo(url);
+//        JSONObject json = videoInfo.getJson();
+//        JSONObject obj =(JSONObject) json.get("embed");
+//
+//        System.out.println(obj.get("html"));
+//        System.out.println(obj);
+//
+//
+////        Iterator<String> keys = json.keys();
+////
+////        ArrayList<String> keyList = new ArrayList<>();
+////        while(keys.hasNext()) {
+////            String key = keys.next().toString();
+////            Object o = json.get(key);
+////            System.out.println(key+": "+ o);
+////            keyList.add(key);
+////        }
+//
+//
+//
+//        return ResponseEntity.ok().body(obj);
+//    }
+
+
+
+    @ApiOperation(value = "일반동영상 업로드", notes = "")
     @PostMapping("/upload/normal")
     public ResponseEntity<?> uploadNormalVideo(@ModelAttribute NormalVideoRequestDto normalVideoRequestDto) throws IOException, VimeoException, InterruptedException {
 
-        //        MultipartFile video = normalVideoRequestDto.getVideo();
-//
-//        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
-
-        File convertFile = new File(System.getProperty("user.dir") + "/" + "IMG_0318.MOV");
-
-        System.out.println(convertFile.length());
-
-
-//        if (convertFile.createNewFile()) {
-//            log.info("createNewfile success");
-//            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-//                fos.write(video.getBytes());
-//            } catch (Exception e) {
-//                log.error(e.getMessage());
-//            }
-//
-//        }
-//            Thread.sleep(10000);
-            JSONObject videoInfo = new JSONObject();
+        MultipartFile video = normalVideoRequestDto.getVideo();
+        //비디오 파일 저장
+        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
+        if (convertFile.createNewFile()) {
+            log.info("createNewfile success");
+            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
+                fos.write(video.getBytes());
+            } catch (Exception e) {
+                log.error(e.getMessage());
+            }
+        }
             String videoEndPoint=null;
-//        try {
-//
-//            Vimeo vimeo = new Vimeo(vimeoToken);
-//
-//             videoEndPoint = vimeo.addVideo(convertFile, false);
-//            System.out.println(videoEndPoint);
-////            Thread.sleep(10000);
-//
-////            videoInfo = vimeo.getVideoInfo(videoEndPoint).getJson().getJSONObject("embed");
-////            log.info("vimeo info {}",vimeo.getVideoInfo(videoEndPoint));
-////            Thread.sleep(1000);
-//        } catch (JSONException e) {
-//            log.error("json error : {}",e);
-//        }
-//            convertFile.delete();
-            Vimeo vimeo = new Vimeo(vimeoToken);
+            String url = null;
 
-//            vimeo.addVideo
-            return ResponseEntity.ok(videoEndPoint);
+        try {
+            Vimeo vimeo = new Vimeo(vimeoToken);
+             videoEndPoint = vimeo.addVideo(convertFile, false);
+
+//            VimeoResponse videoInfo = vimeo.getVideoInfo(videoEndPoint);
+//            JSONObject json = videoInfo.getJson();
+//            JSONObject obj =(JSONObject) json.get("embed");
+//
+//            url =obj.get("html").toString();
+
+        } catch (JSONException e) {
+            log.error("json error : {}",e);
+        }
+        finally {
+            convertFile.delete();
+        }
+        Long userId = retrieveUserId();
+        if (userId == 0L) {
+            throw new CustomException(ErrorCode.NOT_FOUND_USER,"유효한 유저가 아닙니다.");
+        }
+        VideoCode videoCode = new VideoCode(videoEndPoint,url);
+        log.info("video url  {}",videoCode.getUrl());
+        videoService.uploadDirectVideo(videoCode,normalVideoRequestDto,userId);
+
+        return ResponseEntity.ok("저장 완료");
 
     }
 
@@ -141,7 +176,7 @@ public class VideoApiController {
 
 
     @GetMapping("/main")
-    public Page<VideoResponseDto> mainVideoList( Pageable pageable) {
+    public Result mainVideoList( Pageable pageable) {
 
         Long userId = retrieveUserId();
         if (userId == 0L) {
@@ -156,7 +191,7 @@ public class VideoApiController {
 
     @ApiOperation(value = "비디오 상세페이지", notes = "비디오 Id 값을 기준으로 조회")
     @GetMapping("/retrieve/{videoId}")
-    public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) {
+    public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) throws IOException {
 //        comment 개발후 작성
         String ip = getIp();
         Long userId = retrieveUserId();
@@ -192,8 +227,7 @@ public class VideoApiController {
 
     @ApiOperation(value = "비디오 검색", notes = "검색기능, 현재 제목과, description 조회(해시태그 포함예정)")
     @GetMapping("/search")
-    public Page<VideoResponseDto> searchVideo(@RequestParam String query,Pageable pageable) {
-
+    public Result searchVideo(@RequestParam String query,Pageable pageable) {
 
         return videoService.searchVideoQuery(query,pageable,retrieveUserId());
 
@@ -203,11 +237,15 @@ public class VideoApiController {
     @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
     @GetMapping("/concernVideo/{videoId}")
     public Page<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
-
-
             return videoService.retrieveConcernVideosNotLogin(pageable,videoId,retrieveUserId());
-//        return videoService.retrieveConcernVideos(pageable,userId.longValue(),videoId);
+    }
 
+    @ApiOperation(value = "유저가 좋아요한 비디오 리스트", notes = "유저가 좋아요한 비디오의 리시트, 토큰값 필요")
+    @GetMapping("/likesVideos")
+    public Result getLikesVideos(Pageable pageable) {
+        Long userId = retrieveUserId();
+
+        return videoService.retrieveLikesVideos(pageable,userId);
     }
 
     // ip 조회

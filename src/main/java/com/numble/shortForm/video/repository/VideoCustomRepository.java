@@ -17,11 +17,13 @@ public interface VideoCustomRepository {
 
     List<VideoResponseDto> getVideoByTag(Long videoId);
 
-    Page<VideoResponseDto> searchVideoQuery(String query,Pageable pageable,Long userId);
+    Result searchVideoQuery(String query,Pageable pageable,Long userId);
 
-    Page<VideoResponseDto> retrieveMainVideo(Pageable pageable,Long userId);
+    Result retrieveMainVideo(Pageable pageable,Long userId);
 
-    Page<VideoResponseDto> retrieveMainVideoNotLogin(Pageable pageable);
+    Result retrieveMainVideoNotLogin(Pageable pageable);
 
     Page<VideoResponseDto> retrieveConcernVideo(List<Long> videoids,Long videoId,Pageable pageable,Long userId);
+
+    Result retrieveLikesVideos(Pageable pageable,Long userId);
 }

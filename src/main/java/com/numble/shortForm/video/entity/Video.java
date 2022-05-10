@@ -32,6 +32,8 @@ public class Video extends BaseTime {
 
     private String videoUrl;
 
+    private String videoCode;
+
     private String description;
 
     private Long view=0L;
@@ -57,7 +59,7 @@ public class Video extends BaseTime {
     private List<VideoLike> videoLikes = new ArrayList<>();
 
     @Builder
-    public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration) {
+    public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration,String videoCode) {
         this.title = title;
         this.thumbnail = thumbnail;
         this.videoUrl = videoUrl;
@@ -66,6 +68,7 @@ public class Video extends BaseTime {
         this.isBlock = isBlock;
         this.users = users;
         this.duration =duration;
+        this.videoCode=videoCode;
     }
 
     public void addVideoHash(List<VideoHash> tags) {
