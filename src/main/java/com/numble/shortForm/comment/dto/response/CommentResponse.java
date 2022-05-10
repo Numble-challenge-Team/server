@@ -4,9 +4,10 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
+
 @Setter
-public class CommentResponse {
+@Getter
+public class commentResponse {
 
     private long id;
     private String nickname;
@@ -18,7 +19,7 @@ public class CommentResponse {
     private Long videoId;
 
     @QueryProjection
-    public CommentResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId, Long commentSeq, Long videoId) {
+    public commentResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId, Long commentSeq, Long videoId) {
         this.id = id;
         this.nickname = nickname;
         this.context = context;
@@ -28,4 +29,6 @@ public class CommentResponse {
         this.commentSeq = commentSeq;
         this.videoId = videoId;
     }
+
+
 }
