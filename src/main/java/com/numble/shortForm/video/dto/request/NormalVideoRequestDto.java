@@ -23,4 +23,6 @@ public class NormalVideoRequestDto {
     private List<String> tags;
 
     private Long duration;
+
+
 }

@@ -1,7 +1,13 @@
 package com.numble.shortForm.video.vimeo;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import lombok.Getter;
+import lombok.Setter;
 import org.json.JSONObject;
 
+//@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
+//@Getter
+//@Setter
 public class VimeoResponse {
 
     private JSONObject json;
