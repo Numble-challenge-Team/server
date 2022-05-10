@@ -65,9 +65,8 @@ public class CustomReportRepositoryImpl implements CustomReportRepository{
                 video.id,
                 video.title,
                 video.videoUrl,
-                video.context,
                 video.view,
-                //video.created_at,
+                video.created_at,
                 video.isBlock,
                 users.nickname,
                 ExpressionUtils.as(JPAExpressions.select(report.count())

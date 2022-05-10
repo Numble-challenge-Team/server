@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 
 @Getter
-public class commentNumberResponse {
+public class CommentNumberResponse {
 
     private long id;
     private String nickname;
@@ -22,13 +22,14 @@ public class commentNumberResponse {
     private Long commentCount;
     private Long likeCount;
     private LocalDate created_at;
-
+    private String ProfileUrl;
     @Setter
     private boolean isReComment;
 
     @QueryProjection
-    public commentNumberResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId,
-                                 Long commentSeq, Long videoId, Long commentCount, Long likeCount, LocalDateTime created_at) {
+    public CommentNumberResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId,
+                                 Long commentSeq, Long videoId, Long commentCount, Long likeCount, LocalDateTime created_at,
+                                 String profileUrl) {
         this.id = id;
         this.nickname = nickname;
         this.context = context;
@@ -40,5 +41,6 @@ public class commentNumberResponse {
         this.commentCount = commentCount;
         this.likeCount = likeCount;
         this.created_at = created_at.toLocalDate();
+        this.ProfileUrl = profileUrl;
     }
 }

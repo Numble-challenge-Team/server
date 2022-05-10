@@ -1,7 +1,7 @@
 package com.numble.shortForm.comment.controller;
 
-import com.numble.shortForm.comment.dto.response.commentNumberResponse;
-import com.numble.shortForm.comment.dto.response.commentResponse;
+import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
+import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.comment.service.CommentService;
@@ -56,13 +56,13 @@ public class CommentApiController {
     @ApiOperation(value = "video에 해당되는 댓글 불러오기", notes="<big>해당 비디오에 댓글이 있을 경우 List형태로 반환</big>")
     @ApiImplicitParam(name = "videoId", value = "해당비디오의 id값")
     @ApiResponses(
-            {@ApiResponse(code = 200, message = "ok", response = commentNumberResponse.class),
+            {@ApiResponse(code = 200, message = "ok", response = CommentNumberResponse.class),
              @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
             }
     )
     @GetMapping("/{videoId}")
-    public List<commentNumberResponse> commentResponseList(@PathVariable("videoId") Long videoId){
-        List<commentNumberResponse> commentList = commentService.testComment(videoId);
+    public List<CommentNumberResponse> commentResponseList(@PathVariable("videoId") Long videoId){
+        List<CommentNumberResponse> commentList = commentService.testComment(videoId);
 
 
         return commentList;
@@ -71,12 +71,12 @@ public class CommentApiController {
     @ApiOperation(value = "comment에 해당되는 댓글 불러오기", notes = "<big>해당 댓글에 대댓글이 있을 경우 List형태로 반환</big>")
     @ApiImplicitParam(name = "commentSeq", value = "해당 댓글의 id값")
     @ApiResponses({
-            @ApiResponse(code = 200, message = "ok", response = commentResponse.class),
+            @ApiResponse(code = 200, message = "ok", response = CommentResponse.class),
             @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
     })
     @GetMapping("/recomment/{commentSeq}")
-    public List<commentResponse> recommentList(@PathVariable("commentSeq")long commentSeq){
-        List<commentResponse> recommentlist = commentService.reComment(commentSeq);
+    public List<CommentResponse> recommentList(@PathVariable("commentSeq")long commentSeq){
+        List<CommentResponse> recommentlist = commentService.reComment(commentSeq);
 
         return recommentlist;
     }

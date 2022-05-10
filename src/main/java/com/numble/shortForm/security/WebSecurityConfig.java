@@ -45,6 +45,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/v1/users/test","/api/v1/videos/upload/embedded").hasRole("USER")
+                .antMatchers("/api/v1/admins/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
                 .and()
                 .exceptionHandling()

@@ -23,8 +23,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
 
 
     @Override
-    public List<commentResponse> commentPage(Long videoId) {
-        List<commentResponse> fetch = queryFactory.select( new QcommentResponse(
+    public List<CommentResponse> commentPage(Long videoId) {
+        List<CommentResponse> fetch = queryFactory.select( new QCommentResponse(
                 comment.id,
                 users.nickname,
                 comment.context,
@@ -32,7 +32,12 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.isBlock,
                 users.id,
                 comment.commentSeq,
-                comment.videoId
+                comment.videoId,
+                comment.created_at,
+                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
+                        where(comment.id.eq(commentLike.comment.id))
+                        ,"likeCount"),
+                users.profileImg.url
         )).from(comment).where(comment.videoId.eq(videoId))
                 .innerJoin(comment.users, users)
                 .orderBy(comment.created_at.desc())
@@ -41,8 +46,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
         return fetch;
     }
 
-    public List<commentResponse> recommentPage(Long commentSeq) {
-        List<commentResponse> fetch = queryFactory.select( new QcommentResponse(
+    public List<CommentResponse> recommentPage(Long commentSeq) {
+        List<CommentResponse> fetch = queryFactory.select( new QCommentResponse(
                 comment.id,
                 users.nickname,
                 comment.context,
@@ -50,21 +55,25 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.isBlock,
                 users.id,
                 comment.commentSeq,
-                comment.videoId
+                comment.videoId,
+                comment.created_at,
+                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike)
+                        .where(comment.id.eq(commentLike.comment.id)),"likeCount"),
+                users.profileImg.url
         )).from(comment).where(comment.commentSeq.eq(commentSeq)).fetch();
 
         return fetch;
     }
 
     @Override
-    public List<commentNumberResponse> videoCommentPage(Long videoId){
+    public List<CommentNumberResponse> videoCommentPage(Long videoId){
 
 
         QComment acomment = new QComment("acomment");
         QComment bcomment = new QComment("bcomment");
 
 
-        List<commentNumberResponse> fetch = queryFactory.select( new QcommentNumberResponse(
+        List<CommentNumberResponse> fetch = queryFactory.select( new QCommentNumberResponse(
                 acomment.id,
                 users.nickname,
                 acomment.context,
@@ -83,7 +92,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                                 .from(commentLike).where(acomment.id.eq(commentLike.comment.id)),
                         "likeCount"
                 ),
-                acomment.created_at
+                acomment.created_at,
+                acomment.users.profileImg.url
         )).from(acomment).where(acomment.videoId.eq(videoId)).fetch();
 
         fetch.forEach( commentNumberResponse -> {

@@ -1,7 +1,7 @@
 package com.numble.shortForm.comment.service;
 
-import com.numble.shortForm.comment.dto.response.commentNumberResponse;
-import com.numble.shortForm.comment.dto.response.commentResponse;
+import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
+import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.entity.CommentLike;
 import com.numble.shortForm.comment.repository.CommentLikeRepository;
@@ -45,20 +45,20 @@ public class CommentService {
 
     }
 
-    public List<commentNumberResponse> testComment(Long videoId){
-        List<commentNumberResponse> responseLIst = commentRepository.videoCommentPage(videoId);
+    public List<CommentNumberResponse> testComment(Long videoId){
+        List<CommentNumberResponse> responseLIst = commentRepository.videoCommentPage(videoId);
 
         return responseLIst;
     }
 
-    public List<commentResponse> videoComment(Long videoId){
-        List<commentResponse> responseList = commentRepository.commentPage(videoId);
+    public List<CommentResponse> videoComment(Long videoId){
+        List<CommentResponse> responseList = commentRepository.commentPage(videoId);
 
         return responseList;
     }
 
-    public List<commentResponse> reComment(Long commentSeq){
-        List<commentResponse> responseList = commentRepository.recommentPage(commentSeq);
+    public List<CommentResponse> reComment(Long commentSeq){
+        List<CommentResponse> responseList = commentRepository.recommentPage(commentSeq);
 
         return responseList;
     }

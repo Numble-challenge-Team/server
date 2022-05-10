@@ -11,7 +11,6 @@ public class ReportResponseByVideo {
     private Long id;
     private String title;
     private String videoUrl;
-    private String context;
     private Long view;
     private LocalDate created_at;
     private boolean isBlock;
@@ -20,14 +19,13 @@ public class ReportResponseByVideo {
 
     @QueryProjection
     public ReportResponseByVideo(Long id, String title, String videoUrl,
-                                 String context, Long view, /*LocalDateTime created_at,*/ boolean isBlock,
-                                 String nickname, Long reportCount) {
+                                 Long view, LocalDateTime created_at, boolean isBlock,
+                                 String nickname, Long reportCount ) {
         this.id = id;
         this.title = title;
         this.videoUrl = videoUrl;
-        this.context = context;
         this.view = view;
-        //this.created_at = created_at.toLocalDate();
+        this.created_at = created_at.toLocalDate();
         this.isBlock = isBlock;
         this.nickname = nickname;
         this.reportCount = reportCount;

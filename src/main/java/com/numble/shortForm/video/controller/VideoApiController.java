@@ -56,7 +56,7 @@ public class VideoApiController {
     private final AuthenticationFacade authenticationFacade;
     private final UsersRepository usersRepository;
 
-    @Value("${vimeo.token}")
+/*    @Value("${vimeo.token}")
     private String vimeoToken;
 
 
@@ -106,7 +106,7 @@ public class VideoApiController {
             return ResponseEntity.ok(videoEndPoint);
 
     }
-
+*/
     @CrossOrigin(origins = "*", allowedHeaders = "*")
     @ApiOperation(value = "임베디드 동영상 업로드", notes = "(Token 필요)<big>임베디드 동영상 업로드</big>")
     @ApiResponses({

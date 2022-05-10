@@ -1,4 +1,5 @@
 spring:
+
   jpa:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     hibernate:
@@ -16,10 +17,14 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-      url: jdbc:mysql://localhost:3306/video
-      username: root
-      password: 6568
-      driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/video
+    #      jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
+    #      url: jdbc:mysql://localhost:3306/video
+    username: root
+    password: mysql
+    #      username: admin
+    #      password: 1234qwer!
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   redis:
     host: localhost
@@ -32,4 +37,26 @@ jwt:
 springfox:
   documentation:
     swagger:
-        use-model-v3: false
+      use-model-v3: false
+
+server:
+  port: 8081
+file:
+  dir:
+logging:
+  level:
+    com:
+      amazonaws:
+        util:
+          EC2MetadataUtils: ERROR
+cloud:
+  aws:
+    s3:
+      bucket : oz-s3-bucket
+    credentials:
+      access-key: AKIA5SJUPZ5LG7AVCRIQ
+      secret-key:  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
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
