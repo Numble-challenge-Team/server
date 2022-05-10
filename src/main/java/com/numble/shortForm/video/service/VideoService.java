@@ -1,29 +1,37 @@
 package com.numble.shortForm.video.service;
 
+import com.numble.shortForm.comment.dto.response.CommentResponse;
+import com.numble.shortForm.comment.service.CommentService;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.hashtag.entity.HashTag;
 import com.numble.shortForm.hashtag.entity.VideoHash;
-import com.numble.shortForm.hashtag.repository.HashTagRepository;
 import com.numble.shortForm.hashtag.repository.VideoHashRepository;
 import com.numble.shortForm.hashtag.service.HashTagService;
-import com.numble.shortForm.request.PageDto;
+import com.numble.shortForm.security.AuthenticationFacade;
 import com.numble.shortForm.upload.S3Uploader;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
+import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.request.VideoCode;
+import com.numble.shortForm.video.dto.response.Result;
+import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
-import com.numble.shortForm.video.entity.UploadThumbNail;
-import com.numble.shortForm.video.entity.Video;
-import com.numble.shortForm.video.entity.VideoLike;
-import com.numble.shortForm.video.entity.VideoType;
+import com.numble.shortForm.video.entity.*;
+import com.numble.shortForm.video.repository.RecordVideoRepository;
 import com.numble.shortForm.video.repository.VideoLikeRepository;
 import com.numble.shortForm.video.repository.VideoRepository;
+import com.numble.shortForm.video.vimeo.Vimeo;
+import com.numble.shortForm.video.vimeo.VimeoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,27 +55,37 @@ public class VideoService {
     private final HashTagService hashTagService;
     private final VideoHashRepository videoHashRepository;
     private final RedisTemplate redisTemplate;
+    private final RecordVideoRepository recordVideoRepository;
+    private final RecordVideoService recordVideoService;
+    private final AuthenticationFacade authenticationFacade;
+    private final CommentService commentService;
 
+    private static final int PAGE_SIZE =5;
+
+    @Value("${vimeo.token}")
+    private String vimeoToken;
+
+    //embedded 영상 업로드
     public void uploadEmbeddedVideo(EmbeddedVideoRequestDto embeddedVideoRequestDto, Long usersId) throws IOException {
 
         Users users = usersRepository.findById(usersId).orElseThrow(()->{
             throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
         });
 
-        UploadThumbNail uploadThumbNail;
+        Thumbnail thumbnail;
 
         if (embeddedVideoRequestDto.getThumbNail() != null) {
             String url = s3Uploader.uploadFile(embeddedVideoRequestDto.getThumbNail(),"thumbnail");
-            uploadThumbNail = new UploadThumbNail(embeddedVideoRequestDto.getThumbNail().getOriginalFilename(),url);
+            thumbnail = new Thumbnail(url,embeddedVideoRequestDto.getThumbNail().getOriginalFilename());
         }else{
-            uploadThumbNail = new UploadThumbNail(null,null);
+            thumbnail = new Thumbnail(null,null);
         }
 
         Video video = Video.builder()
                 .videoUrl(embeddedVideoRequestDto.getVideoUrl())
-                .uploadThumbNail(uploadThumbNail)
+                .thumbnail(thumbnail)
                 .title(embeddedVideoRequestDto.getTitle())
-                .context(embeddedVideoRequestDto.getContext())
+                .description(embeddedVideoRequestDto.getDescription())
                 .videoType(VideoType.embedded)
                 .isBlock(false)
                 .users(users)
@@ -93,29 +111,104 @@ public class VideoService {
         return videoRepository.retrieveAll(pageable);
     }
 
-    // 비디오 상세조회
-    public VideoResponseDto retrieveDetail(Long videoId,String ip,String userEmail) {
-
+    //로그인하지않은 상세피이지
+    public VideoDetailResponseDto retrieveDetailNotLogin(Long videoId, String ip) {
         String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
         if (IsExistRedis == null) {
             videoRepository.updateView(videoId);
-            redisTemplate.opsForValue().set(videoId+"/"+ip,userEmail,5L,TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(videoId+"/"+ip,"Anonymous User",5L,TimeUnit.MINUTES);
+        }
+        // 기본적으로 id는 1부터 생성되기때문에, 0에는 일치하는 값이 없다.
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,0L);
+        List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
+                .collect(Collectors.toList());
+
+        videoResponseDto.setTags(tags);
+        videoResponseDto.setLiked(false);
+
+        return VideoDetailResponseDto.builder()
+                .videoDetail(videoResponseDto)
+                .comments(commentService.testComment(videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,0L))
+                .build();
+    }
+    // 비디오 상세조회(로그인)
+    public VideoDetailResponseDto retrieveDetail(Long videoId,String ip,Long userId) throws IOException {
+
+
+        // Redis로 5분동안 같은 ip접속시 조회수 제한
+        String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
+        if (IsExistRedis == null) {
+            videoRepository.updateView(videoId);
+            redisTemplate.opsForValue().set(videoId+"/"+ip,"true",5L,TimeUnit.MINUTES);
         }
 
 
-        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId);
+        VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,userId);
+
+        if(videoResponseDto.getVideoType() ==VideoType.upload){
+             Vimeo vimeo = new Vimeo(vimeoToken);
+            VimeoResponse videoInfo = vimeo.getVideoInfo(videoResponseDto.getUrl());
+            JSONObject json = videoInfo.getJson();
+            JSONObject obj =(JSONObject) json.get("embed");
+
+            videoResponseDto.setUrl( String.valueOf(obj.get("html")));
+
+        }
 
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
+
          videoResponseDto.setTags(tags);
+         //좋아요 눌렀는지 확인
+        if (searchVideoLike(userId, videoId) != null) {
+            videoResponseDto.setLiked(true);
+        }else{
+            videoResponseDto.setLiked(false);
+        }
 
-        return videoResponseDto;
+         // 로그 저장
+        recordVideoRepository.save(new RecordVideo(videoId,userId));
+
+        return VideoDetailResponseDto.builder()
+                .videoDetail(videoResponseDto)
+                .comments(commentService.testComment(videoId))
+                .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,userId))
+                .build();
     }
 
-    public Page<VideoResponseDto> retrieveMyVideo(String userEmail, PageDto pageDto) {
-        return videoRepository.retrieveMyVideo(userEmail,pageDto);
+
+    // 내비디오리스트 조회
+    public Result retrieveMyVideo(String userEmail, Pageable pageable) {
+
+        Users users = usersRepository.findByEmail(userEmail).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER, ""));
+
+        Result result = videoRepository.retrieveMyVideo(userEmail, pageable);
+        List<VideoResponseDto> contents = result.getContents();
+
+        contents =checkLiked(users, contents);
+
+        result.setContents(contents);
+        return result;
     }
 
+    private List<VideoResponseDto> checkLiked (Users users, List<VideoResponseDto> contents) {
+        for (VideoResponseDto videoResponseDto : contents) {
+
+            //여기서 get사용 주의하자!!!!
+            Video video = videoRepository.findById(videoResponseDto.getVideoId()).get();
+
+            if (videoLikeRepository.existsByVideoAndUsers(video, users)) {
+                log.info("likes 존재함!");
+                videoResponseDto.setLiked(true);
+                continue;
+            }
+            videoResponseDto.setLiked(false);
+        }
+        return contents;
+    }
+
+    // 좋아요 요청
     public boolean requestLikeVideo(String userEmail,Long videoId) {
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
         Video video = videoRepository.findById(videoId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_VIDEO,String.format("[%d] 비디오 아이디가 조회되지 않습니다.",videoId)));
@@ -130,5 +223,144 @@ public class VideoService {
 
     private boolean existsVideoLike(Users users, Video video) {
        return videoLikeRepository.findByUsersAndVideo(users,video).isEmpty();
+    }
+
+    //관심 동영상 조회
+
+    public Page<VideoResponseDto> retrieveConcernVideos(Pageable pageable,Long userId,Long videoId) {
+
+        Users users = usersRepository.findById(userId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        //사용자가 봤던 비디오 id 리스트 가져옴 5개
+        List<Long> recordVideoList = recordVideoService.getRecordVideoList(videoId, users.getId(),PageRequest.of(0,PAGE_SIZE, Sort.by("created_at").descending()));
+
+
+//        for (Long aLong : recordVideoList) {
+//            Video video = videoRepository.findById(aLong).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_VIDEO, "db에러 관리자에게 문의하세요"));
+//            List<VideoHash> videoHashes = video.getVideoHashes();
+//            for (VideoHash videoHash : videoHashes) {
+//                System.out.println(videoHash.getHashTag().getTagName());
+//            }
+//        }
+//
+//        hashTagService.getTagByConcern(recordVideoList);
+//
+//        videoRepository.getVideoByTag(videoId);
+
+
+        return null;
+    }
+    // 로그인하지 않은 관심영상
+    public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId,Long userId) {
+
+        // videoid 로 tag id 조회
+        List<Long> tagids = videoHashRepository.findAllByVideoId(videoId).stream().map(obj -> obj.getHashTag().getId()).collect(Collectors.toList());
+        // tag조회 한걸로 tag id를 가진 video id 조회
+        List<Long> videoids = videoHashRepository.findAllByHashTagIdIn(tagids).stream().map(obj -> obj.getVideo().getId()).collect(Collectors.toList());
+        // 자기 자신은 제외
+        videoids.remove(videoId);
+
+
+        return videoRepository.retrieveConcernVideo(videoids,videoId,pageable,userId);
+    }
+
+        // 동여상 검색
+    public Result searchVideoQuery(String query,Pageable pageable,Long userId) {
+        Result result = videoRepository.searchVideoQuery(query, pageable, userId);
+
+        List<VideoResponseDto> contents = result.getContents();
+        if (userId != 0L) {
+            Users users = usersRepository.findById(userId).get();
+            result.setContents(checkLiked(users, contents));
+            return result;
+        }
+        for (VideoResponseDto dto : contents) {
+            dto.setLiked(false);
+        }
+        result.setContents(contents);
+        return result;
+    }
+
+
+    //로그인한 메인 동영상 리스트
+    public Result retrieveMainVideoList(Pageable pageable,Long userId) {
+        Result result = videoRepository.retrieveMainVideo(pageable, userId);
+
+
+        Users users = usersRepository.findById(userId).orElseThrow(()->
+                new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        result.setContents(checkLiked(users,result.getContents()));
+
+        return result;
+
+    }
+
+    //로그인하지않은 메인 동여상 리스트
+    public Result retrieveMainVideoListNotLogin(Pageable pageable) {
+
+        return  videoRepository.retrieveMainVideoNotLogin(pageable);
+
+    }
+
+    private VideoLike searchVideoLike(Long usersId, Long videoId) {
+
+        Users users = usersRepository.getById(usersId);
+        Video video = videoRepository.getById(videoId);
+        return  videoLikeRepository.findByUsersAndVideo(users,video).orElse(null);
+    }
+
+    public void uploadDirectVideo(VideoCode videoCode, NormalVideoRequestDto normalVideoRequestDto, Long userId) throws IOException {
+
+        Users users = usersRepository.findById(userId).get();
+
+        Thumbnail thumbnail;
+
+        if (normalVideoRequestDto.getThumbnail() != null) {
+            String url = s3Uploader.uploadFile(normalVideoRequestDto.getThumbnail(),"thumbnail");
+            thumbnail = new Thumbnail(url,normalVideoRequestDto.getThumbnail().getOriginalFilename());
+        }else{
+            thumbnail = new Thumbnail(null,null);
+        }
+
+
+        Video video = Video.builder()
+                .users(users)
+                .videoUrl(videoCode.getCode())
+                .videoType(VideoType.upload)
+                .description(normalVideoRequestDto.getDescription())
+                .isBlock(false)
+                .duration(normalVideoRequestDto.getDuration())
+                .title(normalVideoRequestDto.getTitle())
+                .thumbnail(thumbnail)
+                .build();
+
+        Video createdVideo = videoRepository.save(video);
+
+        if ( normalVideoRequestDto.getTags().isEmpty()) {
+            return;
+        }
+
+        List<HashTag> tags = hashTagService.createTag(normalVideoRequestDto.getTags());
+
+        List<VideoHash> videoHashes = tags.stream().map(t -> new VideoHash(createdVideo, t))
+                .collect(Collectors.toList());
+
+        createdVideo.addVideoHash(videoHashes);
+        videoRepository.save(createdVideo);
+    }
+
+    public Result retrieveLikesVideos(Pageable pageable,Long userId) {
+
+        Result result = videoRepository.retrieveLikesVideos(pageable, userId);
+
+        List<VideoResponseDto> contents = result.getContents();
+
+        for (VideoResponseDto content : contents) {
+            content.setLiked(true);
+        }
+        result.setContents(contents);
+
+        return result;
     }
 }

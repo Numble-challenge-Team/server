@@ -38,6 +38,9 @@ public class Users extends BaseTime implements UserDetails {
 
     private String nickname;
 
+    @Embedded
+    private ProfileImg profileImg;
+
     @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
     private List<Video> videos = new ArrayList<>();
 
@@ -50,11 +53,12 @@ public class Users extends BaseTime implements UserDetails {
     private List<String> roles = new ArrayList<>();
 
     @Builder
-    public Users(String email, String password, String nickname, List<String> roles) {
+    public Users(String email, String password, String nickname, List<String> roles,ProfileImg profileImg) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.roles = roles;
+        this.profileImg =profileImg;
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.numble.shortForm.response.Response;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
 import com.numble.shortForm.user.entity.Authority;
+import com.numble.shortForm.user.entity.ProfileImg;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.jwt.JwtTokenProvider;
 import com.numble.shortForm.user.repository.UsersRepository;
@@ -41,6 +42,7 @@ public class UserService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisTemplate redisTemplate;
 
+    private static final String basic_url ="https://oz-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic.png";
     @Transactional
     public ResponseEntity<?> signUp(UserRequestDto.SignUp signUpDto) {
 
@@ -53,6 +55,7 @@ public class UserService {
                 .nickname(signUpDto.getNickname())
                 .password(passwordEncoder.encode(signUpDto.getPassword()))
                 .roles(Collections.singletonList(Authority.ROLE_USER.name()))
+                .profileImg(new ProfileImg("basic.png",basic_url))
                 .build();
 
         usersRepository.save(user);
@@ -82,26 +85,37 @@ public class UserService {
 
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
 
-        if (jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
+        if (!jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
         }
+        log.info("refresh token 체크 완료");
+
         Authentication authentication = jwtTokenProvider.getAuthentication(reissueDto.getAccessToken());
+
         log.info("authentication getPrincipal {}",authentication.getPrincipal());
         log.info("authentication getname {}",authentication.getName());
         String refreshToken =(String) redisTemplate.opsForValue().get("RT:"+authentication.getName());
 
         if (ObjectUtils.isEmpty(refreshToken)) {
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM);
+            log.info("Refresh toekn이 존재하지 않습니다.");
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh toekn이 존재하지 않습니다.");
         }
+        log.info("original refreshToken {}",refreshToken);
+        log.info("get refreshToken {}",reissueDto.getRefreshToken());
+
         if(!refreshToken.equals(reissueDto.getRefreshToken())) {
+            log.info("Refresh Token 정보가 it is not correct.");
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 일치하지 않습니다.");
         }
-
+        log.info("token info  생성 직전 ");
         UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+        log.info("token info {}",tokenInfo);
 
         redisTemplate.opsForValue()
                 .set("RT:" + authentication.getName(), tokenInfo.getRefreshToken(), tokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);
+        log.info("redis tmeplate 토큰 저장");
         return Response.success(tokenInfo, "Token 정보가 갱신되었습니다.", HttpStatus.OK);
+
     }
 
     public ResponseEntity<?> logout(UserRequestDto.Logout logoutDto) {
