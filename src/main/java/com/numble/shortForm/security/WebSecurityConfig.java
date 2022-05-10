@@ -44,12 +44,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/test","/api/v1/videos/upload/embedded").hasRole("USER")
+                .antMatchers("/api/v1/users/reissue").permitAll()
+                .antMatchers("/api/v1/videos/likesVideos","/api/v1/users/test","/api/v1/videos/upload/embedded","/api/v1/videos/like/**","/api/v1/videos/retrieve/myVideo").hasRole("USER")
                 .anyRequest().permitAll()
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
-                .accessDeniedHandler(new CustomAccessDeniedHandler())
+//                .accessDeniedHandler(new CustomAccessDeniedHandler())
                 .and()
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider,redisTemplate), UsernamePasswordAuthenticationFilter.class);
     }

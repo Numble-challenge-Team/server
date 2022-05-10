@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +36,9 @@ public class JwtTokenProvider {
 
     private static final String AUTHORITIES_KEY ="auth";
     private static final String BEARER_TYPE ="Bearer";
-    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 *1000L; //30 Minutes
+//    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 10 *1000L;
+
+    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 7 * 24* 60 *1000L; //30 Minutes
     private static final Long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 *1000L; //7 days
 
     private final Key key;
@@ -95,10 +98,11 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken);
 
+
         //문제 발생 추후에 수정
-//        if (claims.get(AUTHORITIES_KEY) == null) {
-//            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN);
-//        }
+        if (claims.get(AUTHORITIES_KEY) == null) {
+            throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN,"권한 정보가 없는 토큰입니다.");
+        }
         // claims 에서 권한 정보 가져오기
 
         Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
@@ -115,7 +119,9 @@ public class JwtTokenProvider {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {
+            log.info("만료 체크");
             return e.getClaims();
+//            throw new CustomException(ErrorCode.EXPIRE_TOKEN);
         }
     }
 
@@ -128,16 +134,14 @@ public class JwtTokenProvider {
         return (expiration.getTime() - now);
     }
 
-    public boolean validationToken(String token) {
-
+    public boolean validationToken(String token) throws ExpiredJwtException{
+        log.info("access-token : {}" ,token);
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token {}", e);
-        } catch (ExpiredJwtException e) {
-            log.info("Expire JWT Token {}", e);
-        } catch (UnsupportedJwtException e) {
+        }catch (UnsupportedJwtException e) {
             log.info("UnSupproted JWT Token {}", e);
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty {}",e);
@@ -145,4 +149,22 @@ public class JwtTokenProvider {
         return false;
     }
 
+    public boolean revalidationToken(String token, HttpServletRequest request) {
+
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token {}", e);
+        }catch (ExpiredJwtException e){
+            request.setAttribute("exception",ErrorCode.EXPIRED_TOKEN.getDetail());
+        }
+        catch (UnsupportedJwtException e) {
+            log.info("UnSupproted JWT Token {}", e);
+        } catch (IllegalArgumentException e) {
+            log.info("JWT claims string is empty {}",e);
+        }
+        log.info("해당하지 않음");
+        return false;
+    }
 }

@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    NON_LOGIN(HttpStatus.BAD_REQUEST,"로그인 된 상태가 아닙니다."),
+    EXPIRE_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 만료되었습니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND,"해당하는 유저가 존재하지 않습니다"),
     NOT_FOUND_VIDEO(HttpStatus.NOT_FOUND,"해당하는 비디오가 존재하지 않습니다"),
     EXIST_EMAIL_ERROR(HttpStatus.BAD_REQUEST,"이미 존재하는 이메일입니다."),
@@ -18,7 +20,7 @@ public enum ErrorCode {
 
     NONE_AUTHENTICATION_TOKEN(HttpStatus.BAD_REQUEST,"권한 정보가 없는 토큰입니다."),
     WRONG_TYPE_TOKEN(HttpStatus.BAD_REQUEST,"토큰의 타입이 틀렸습니다."),
-    EXPIRED_TOKEN(HttpStatus.BAD_REQUEST,"만료된 토큰입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED,"만료된 토큰입니다."),
     UNSUPPORTED_TOKEN(HttpStatus.BAD_REQUEST,"지원하지 않는 토큰입니다."),
     WRONG_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 이상합니다"),
     UNKNOWN_ERROR(HttpStatus.BAD_REQUEST,"토큰이 유효하지 않습니다."),
