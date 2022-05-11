@@ -168,7 +168,10 @@ public class UserApiController {
         return ResponseEntity.ok().body("변경완료");
     }
 
-
+    private String test() {
+        System.out.println("test");
+        return "11";
+    }
 
     // userid 조회
     private Long retrieveUserId() {
