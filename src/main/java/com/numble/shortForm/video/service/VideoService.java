@@ -1,6 +1,5 @@
 package com.numble.shortForm.video.service;
 
-import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.service.CommentService;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
@@ -14,6 +13,7 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.request.UpdateVideoDto;
 import com.numble.shortForm.video.dto.request.VideoCode;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
@@ -23,9 +23,12 @@ import com.numble.shortForm.video.repository.RecordVideoRepository;
 import com.numble.shortForm.video.repository.VideoLikeRepository;
 import com.numble.shortForm.video.repository.VideoRepository;
 import com.numble.shortForm.video.vimeo.Vimeo;
+import com.numble.shortForm.video.vimeo.VimeoException;
+import com.numble.shortForm.video.vimeo.VimeoLogic;
 import com.numble.shortForm.video.vimeo.VimeoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -35,7 +38,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -59,6 +65,7 @@ public class VideoService {
     private final RecordVideoService recordVideoService;
     private final AuthenticationFacade authenticationFacade;
     private final CommentService commentService;
+    private final VimeoLogic vimeoLogic;
 
     private static final int PAGE_SIZE =5;
 
@@ -74,9 +81,9 @@ public class VideoService {
 
         Thumbnail thumbnail;
 
-        if (embeddedVideoRequestDto.getThumbNail() != null) {
-            String url = s3Uploader.uploadFile(embeddedVideoRequestDto.getThumbNail(),"thumbnail");
-            thumbnail = new Thumbnail(url,embeddedVideoRequestDto.getThumbNail().getOriginalFilename());
+        if (embeddedVideoRequestDto.getThumbnail() != null) {
+            String url = s3Uploader.uploadFile(embeddedVideoRequestDto.getThumbnail(),"thumbnail");
+            thumbnail = new Thumbnail(url,embeddedVideoRequestDto.getThumbnail().getOriginalFilename());
         }else{
             thumbnail = new Thumbnail(null,null);
         }
@@ -310,7 +317,7 @@ public class VideoService {
         return  videoLikeRepository.findByUsersAndVideo(users,video).orElse(null);
     }
 
-    public void uploadDirectVideo(VideoCode videoCode, NormalVideoRequestDto normalVideoRequestDto, Long userId) throws IOException {
+    public void uploadDirectVideo(String videoEndPoint, NormalVideoRequestDto normalVideoRequestDto, Long userId) throws IOException {
 
         Users users = usersRepository.findById(userId).get();
 
@@ -326,7 +333,7 @@ public class VideoService {
 
         Video video = Video.builder()
                 .users(users)
-                .videoUrl(videoCode.getCode())
+                .videoUrl(videoEndPoint)
                 .videoType(VideoType.upload)
                 .description(normalVideoRequestDto.getDescription())
                 .isBlock(false)
@@ -363,4 +370,53 @@ public class VideoService {
 
         return result;
     }
+
+    public void updateEmbeddedVideo(UpdateVideoDto updateVideoDto) throws IOException {
+
+        Video video = videoRepository.getById(updateVideoDto.getVideoId());
+        Video updateVideo = reFreshVideo(video, updateVideoDto);
+        videoRepository.save(updateVideo);
+    }
+
+    private Video reFreshVideo(Video video, UpdateVideoDto updateVideoDto) throws IOException {
+
+        Thumbnail thumbnail =new Thumbnail(null,null);
+        List<VideoHash> videoHashes =null;
+
+        if (updateVideoDto.getThumbnail().getSize() !=0L) {
+            log.info("upload !!");
+            String url = s3Uploader.uploadFile(updateVideoDto.getThumbnail(),"thumbnail");
+            thumbnail = new Thumbnail(url,updateVideoDto.getThumbnail().getOriginalFilename());
+        }
+        if (!updateVideoDto.getTags().isEmpty()) {
+            videoHashRepository.deleteAllByVideo(video);
+            List<HashTag> tags = hashTagService.createTag(updateVideoDto.getTags());
+                    videoHashes = tags.stream().map(t -> new VideoHash(video, t))
+                    .collect(Collectors.toList());
+        }
+
+        if (updateVideoDto.getType().equals(VideoType.upload)) {
+
+            VimeoResponse vimeoResponse = vimeoLogic.deleteVimeo(video.getVideoCode());
+            log.info("remove originalVideo {}",vimeoResponse.getStatusCode());
+
+            String videoCode = vimeoLogic.uploadNormalVideo(updateVideoDto.getVideo());
+
+            updateVideoDto.setUrl(videoCode);
+        }
+
+        video.updateVideo(updateVideoDto,thumbnail,videoHashes);
+
+        return video;
+    }
+
+
+
+    public void updateUploadVideo(UpdateVideoDto updateVideoDto) throws IOException {
+        Video video = videoRepository.getById(updateVideoDto.getVideoId());
+        Video updateVideo = reFreshVideo(video, updateVideoDto);
+        videoRepository.save(updateVideo);
+    }
+    
+    
 }
