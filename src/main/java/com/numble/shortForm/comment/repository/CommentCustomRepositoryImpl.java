@@ -1,9 +1,12 @@
 package com.numble.shortForm.comment.repository;
 
-import com.numble.shortForm.comment.dto.response.*;
+import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
+import com.numble.shortForm.comment.dto.response.CommentResponse;
+import com.numble.shortForm.comment.dto.response.QCommentNumberResponse;
+import com.numble.shortForm.comment.dto.response.QCommentResponse;
 import com.numble.shortForm.comment.entity.QComment;
+import com.numble.shortForm.user.entity.QUsers;
 import com.querydsl.core.types.ExpressionUtils;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -12,33 +15,27 @@ import java.util.List;
 
 import static com.numble.shortForm.comment.entity.QComment.comment;
 import static com.numble.shortForm.user.entity.QUsers.users;
-import static com.numble.shortForm.comment.entity.QCommentLike.commentLike;
+
 
 @RequiredArgsConstructor
 public class CommentCustomRepositoryImpl implements CommentCustomRepository{
 
-    private final JPAQueryFactory queryFactory;
 
-    //public CommentCustomRepositoryImpl() {queryFactory = null;}
+    private final JPAQueryFactory queryFactory;
 
 
     @Override
-    public List<CommentResponse> CommentPage(Long videoId) {
+    public List<CommentResponse> commentPage(Long videoId) {
         List<CommentResponse> fetch = queryFactory.select( new QCommentResponse(
-                comment.id,
-                users.nickname,
-                comment.context,
-                comment.title,
-                comment.isBlock,
-                users.id,
-                comment.commentSeq,
-                comment.videoId,
-                        comment.created_at,
-                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
-                        where(comment.id.eq(commentLike.comment.id)),"LikeCount"
-                ),
-                users.profileImg.url
-        )).from(comment).where(comment.videoId.eq(videoId))
+                        comment.id,
+                        users.nickname,
+                        comment.context,
+                        comment.title,
+                        comment.isBlock,
+                        users.id,
+                        comment.commentSeq,
+                        comment.videoId
+                )).from(comment).where(comment.videoId.eq(videoId))
                 .innerJoin(comment.users, users)
                 .orderBy(comment.created_at.desc())
                 .fetch();
@@ -55,12 +52,7 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.isBlock,
                 users.id,
                 comment.commentSeq,
-                comment.videoId,
-                comment.created_at,
-                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
-                        where(comment.id.eq(commentLike.comment.id)),"LikeCount"
-                ),
-                users.profileImg.url
+                comment.videoId
         )).from(comment).where(comment.commentSeq.eq(commentSeq)).fetch();
 
         return fetch;
@@ -87,22 +79,16 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                         JPAExpressions.select(bcomment.commentSeq.count())
                                 .from(bcomment).where(bcomment.commentSeq.eq(acomment.id)),
                         "commentCount"
-                ),
-                acomment.created_at,
-                ExpressionUtils.as(
-                        JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
-                                where(acomment.id.eq(commentLike.comment.id)),"LikeCount"
-                ),
-                users.profileImg.url
+                )
         )).from(acomment).where(acomment.videoId.eq(videoId)).fetch();
 
-        fetch.forEach( commentNumberResponse -> {
-                if(commentNumberResponse.getCommentCount() == 0){
-                    commentNumberResponse.setReComment(false);
-                } else{
-                    commentNumberResponse.setReComment(true);
+        fetch.forEach( CommentNumberResponse -> {
+                    if(CommentNumberResponse.getCommentCount() == 0){
+                        CommentNumberResponse.setReComment(false);
+                    } else{
+                        CommentNumberResponse.setReComment(true);
+                    }
                 }
-            }
         );
 
         return fetch;

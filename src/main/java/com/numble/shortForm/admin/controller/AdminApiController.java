@@ -29,6 +29,7 @@ public class AdminApiController {
     @GetMapping("/health")
     public ResponseEntity checkHealth() {
         log.info("health check");
+        log.info("video redirect ok!");
         return ResponseEntity.ok().body("");
     }
 
