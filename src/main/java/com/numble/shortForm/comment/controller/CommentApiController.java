@@ -133,6 +133,28 @@ public class CommentApiController {
 
         return ResponseEntity.ok().body("ok");
     }
+    @ApiOperation(value = "comment 좋아요", notes = "<big>comment 좋아요 누를 때 accessToken 필요")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
+            @ApiImplicitParam(name = "commentId", value = "댓글의 id값")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "ok"),
+            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
+    })
+    @PostMapping("/auth/like/{commentId}")
+    public ResponseEntity<?> requestCommentLike(@PathVariable("commentId")Long commentId){
+        String userEmail = authenticationFacade.getAuthentication().getName();
+
+
+
+        if(!commentService.requestLikeComeent(userEmail, commentId)){
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"잘못된 요청입니다");
+        }
+
+        return ResponseEntity.ok().body("ok");
+    }
 
     /*@GetMapping("test/{videoId}")
     public List<commentNumberResponse> testingApi(@PathVariable("videoId") Long videoId){

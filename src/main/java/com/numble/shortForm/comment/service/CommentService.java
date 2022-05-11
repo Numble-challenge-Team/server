@@ -88,7 +88,7 @@ public class CommentService {
         commentRepository.deleteById(commentId);
     }
 
-    public boolean requestLikeVideo(String userEmail,Long commentId) {
+    public boolean requestLikeComeent(String userEmail,Long commentId) {
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_VIDEO,String.format("[%d] 댓글 아이디가 조회되지 않습니다.",commentId)));
 
