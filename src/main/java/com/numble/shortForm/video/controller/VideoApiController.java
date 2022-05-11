@@ -140,18 +140,6 @@ public class VideoApiController {
         return ResponseEntity.ok().body("ok");
     }
 
-//    @ApiOperation(value = "모든 동영상 조회", notes = "테스트하실때 확인하실 동영상 리스트 조회, size는 parameter로 /  기본값 5")
-//    @ApiResponses({
-//            @ApiResponse(code = 209, message = "content 내부  동영상 구조", response = VideoResponseDto.class),
-//            @ApiResponse(code = 500, message = "서버 에러", response = ServerErrorResponse.class, responseContainer = "List")
-//    })
-//    @GetMapping("/retrieve/all")
-//    public Page<VideoResponseDto> retrieveVideoAll(@RequestParam(defaultValue = "5") int size) {
-//
-//        return videoService.retrieveAll(Pageable.ofSize(size));
-//    }
-
-
     @GetMapping("/main")
     public Result mainVideoList( Pageable pageable) {
 

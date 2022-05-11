@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -25,9 +26,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate redisTemplate;
 
+
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
 
 
         http
@@ -45,7 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/v1/users/reissue").permitAll()
-                .antMatchers("/api/v1/videos/likesVideos","/api/v1/users/test","/api/v1/videos/upload/embedded","/api/v1/videos/like/**","/api/v1/videos/retrieve/myVideo").hasRole("USER")
+                .antMatchers("/api/v1/users/update","/api/v1/users/profile","/api/v1/videos/likesVideos","/api/v1/users/test",
+                        "/api/v1/videos/upload/embedded","/api/v1/videos/like/**","/api/v1/videos/retrieve/myVideo").hasRole("USER")
                 .anyRequest().permitAll()
                 .and()
                 .exceptionHandling()

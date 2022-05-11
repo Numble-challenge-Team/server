@@ -383,7 +383,7 @@ public class VideoService {
         Thumbnail thumbnail =new Thumbnail(null,null);
         List<VideoHash> videoHashes =null;
 
-        if (updateVideoDto.getThumbnail()!=null) {
+        if (updateVideoDto.getThumbnail().getSize() !=0L) {
             log.info("upload !!");
             String url = s3Uploader.uploadFile(updateVideoDto.getThumbnail(),"thumbnail");
             thumbnail = new Thumbnail(url,updateVideoDto.getThumbnail().getOriginalFilename());
