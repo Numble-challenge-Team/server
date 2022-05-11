@@ -22,11 +22,12 @@ public class CommentResponse {
     private Long videoId;
     private LocalDate created_at;
     private Long LikeCount;
+    private String ProfileImgUrl;
 
     @QueryProjection
 
     public CommentResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId,
-                           Long commentSeq, Long videoId, LocalDateTime created_at, Long LikeCount) {
+                           Long commentSeq, Long videoId, LocalDateTime created_at, Long LikeCount, String ProfileImgUrl) {
         this.id = id;
         this.nickname = nickname;
         this.context = context;
@@ -37,5 +38,6 @@ public class CommentResponse {
         this.videoId = videoId;
         this.created_at = created_at.toLocalDate();
         this.LikeCount = LikeCount;
+        this.ProfileImgUrl = ProfileImgUrl;
     }
 }

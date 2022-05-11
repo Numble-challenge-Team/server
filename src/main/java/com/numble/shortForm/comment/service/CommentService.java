@@ -1,11 +1,9 @@
 package com.numble.shortForm.comment.service;
 
 import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
-import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.entity.CommentLike;
-import com.numble.shortForm.comment.repository.CommentCustomRepository;
 import com.numble.shortForm.comment.repository.CommentLikeRepository;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.exception.CustomException;
@@ -92,16 +90,17 @@ public class CommentService {
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER));
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_VIDEO,String.format("[%d] 댓글 아이디가 조회되지 않습니다.",commentId)));
 
+        
         if (existsCommentLike(users, comment)) {
             commentLikeRepository.save(new CommentLike(users,comment));
             return true;
         }
-        commentLikeRepository.deleteByCommentAndUsers(users,comment);
+        commentLikeRepository.deleteByUsersAndComment(users,comment);
         return false;
     }
 
     private boolean existsCommentLike(Users users, Comment comment) {
-        return commentLikeRepository.findByCommentAndUsers(users,comment).isEmpty();
+        return commentLikeRepository.findByUsersAndComment(users,comment).isEmpty();
     }
 
 

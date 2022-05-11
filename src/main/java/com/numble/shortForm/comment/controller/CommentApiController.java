@@ -145,13 +145,12 @@ public class CommentApiController {
     })
     @PostMapping("/auth/like/{commentId}")
     public ResponseEntity<?> requestCommentLike(@PathVariable("commentId")Long commentId){
+        //System.out.println("commentId = " + commentId);
         String userEmail = authenticationFacade.getAuthentication().getName();
 
 
+        boolean LikeCheck = commentService.requestLikeComeent(userEmail, commentId);
 
-        if(!commentService.requestLikeComeent(userEmail, commentId)){
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"잘못된 요청입니다");
-        }
 
         return ResponseEntity.ok().body("ok");
     }

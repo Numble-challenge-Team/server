@@ -36,8 +36,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                         comment.created_at,
                 ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
                         where(comment.id.eq(commentLike.comment.id)),"LikeCount"
-                )
-
+                ),
+                users.profileImg.url
         )).from(comment).where(comment.videoId.eq(videoId))
                 .innerJoin(comment.users, users)
                 .orderBy(comment.created_at.desc())
@@ -59,7 +59,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.created_at,
                 ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
                         where(comment.id.eq(commentLike.comment.id)),"LikeCount"
-                )
+                ),
+                users.profileImg.url
         )).from(comment).where(comment.commentSeq.eq(commentSeq)).fetch();
 
         return fetch;
@@ -91,7 +92,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 ExpressionUtils.as(
                         JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
                                 where(acomment.id.eq(commentLike.comment.id)),"LikeCount"
-                )
+                ),
+                users.profileImg.url
         )).from(acomment).where(acomment.videoId.eq(videoId)).fetch();
 
         fetch.forEach( commentNumberResponse -> {
