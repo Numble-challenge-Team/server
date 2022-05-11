@@ -2,6 +2,7 @@ package com.numble.shortForm.comment.controller;
 
 import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
+import com.numble.shortForm.comment.dto.response.IsCommentLike;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.comment.service.CommentService;
@@ -19,6 +20,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+
+@Api(tags = "댓글작성 api")
 @RestController
 @RequestMapping("/api/v1/comments/")
 @RequiredArgsConstructor
@@ -31,15 +35,15 @@ public class CommentApiController {
 
     @ApiOperation(value = "댓글작성", notes = "<big>댓글 작성에 성공하면, ok 반환</big>")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "comment", value = "댓글을 작성하기 위한 json"),
-            @ApiImplicitParam(name = "bearer token", value = "댓글을 작성하기위한 권한요청을위한 access토큰")}
+        @ApiImplicitParam(name = "comment", value = "댓글을 작성하기 위한 json"),
+        @ApiImplicitParam(name = "bearer token", value = "댓글을 작성하기위한 권한요청을위한 access토큰")}
     )
     @ApiResponses({
             @ApiResponse(code = 200, message = "ok", response = Response.class),
             @ApiResponse(code = 404, message = "유저 NOT FOUND 오류", response = ErrorResponse.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "서버 내부 에러", response = ErrorResponse.class)}
     )
-    @PostMapping("/create")
+    @PostMapping("/auth/comment")
     public ResponseEntity<?> createComment(@RequestBody Comment comment){
 
         String userEmail = authenticationFacade.getAuthentication().getName();
@@ -55,11 +59,11 @@ public class CommentApiController {
     @ApiImplicitParam(name = "videoId", value = "해당비디오의 id값")
     @ApiResponses(
             {@ApiResponse(code = 200, message = "ok", response = CommentNumberResponse.class),
-                    @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
+             @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
             }
     )
-    @GetMapping("/commentList/{videoId}")
-    public List<CommentNumberResponse> CommentResponseList(@PathVariable("videoId") Long videoId){
+    @GetMapping("/{videoId}")
+    public List<CommentNumberResponse> commentResponseList(@PathVariable("videoId") Long videoId){
         List<CommentNumberResponse> commentList = commentService.testComment(videoId);
 
 
@@ -89,7 +93,7 @@ public class CommentApiController {
             @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
             @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
     })
-    @PatchMapping("/put")
+    @PatchMapping("/auth/comment")
     public ResponseEntity<?> updateComment(@RequestBody Comment comment){
         String userEmail = authenticationFacade.getAuthentication().getName();
 
@@ -131,4 +135,32 @@ public class CommentApiController {
 
         return ResponseEntity.ok().body("ok");
     }
+    @ApiOperation(value = "comment 좋아요", notes = "<big>comment 좋아요 누를 때 accessToken 필요")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
+            @ApiImplicitParam(name = "commentId", value = "댓글의 id값")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "ok"),
+            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
+    })
+    @PostMapping("/auth/like/{commentId}")
+    public ResponseEntity<?> requestCommentLike(@PathVariable("commentId")Long commentId){
+        //System.out.println("commentId = " + commentId);
+        String userEmail = authenticationFacade.getAuthentication().getName();
+
+
+        boolean LikeCheck = commentService.requestLikeComeent(userEmail, commentId);
+
+
+        return ResponseEntity.ok().body(new IsCommentLike(LikeCheck));
+    }
+
+    /*@GetMapping("test/{videoId}")
+    public List<commentNumberResponse> testingApi(@PathVariable("videoId") Long videoId){
+        List<commentNumberResponse> list = commentService.testComment(videoId);
+
+        return list;
+    }*/
 }
