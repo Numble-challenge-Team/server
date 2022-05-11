@@ -76,7 +76,7 @@ public class VideoResponseDto {
 
     }
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner,VideoType videoType) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
@@ -89,6 +89,7 @@ public class VideoResponseDto {
         this.duration = duration;
         this.likes = likes.longValue();
         this.description = description;
+        this.videoType = videoType;
         this.isOwner = isOwner;
 
     }

@@ -1,6 +1,7 @@
 package com.numble.shortForm.hashtag.repository;
 
 import com.numble.shortForm.hashtag.entity.VideoHash;
+import com.numble.shortForm.video.entity.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,4 +14,6 @@ public interface VideoHashRepository extends JpaRepository<VideoHash,Long> {
     List<VideoHash> findAllByVideoIdIn(List<Long> recordVideoList);
 
     List<VideoHash> findAllByHashTagIdIn(List<Long> tagids);
+
+    void deleteAllByVideo(Video video);
 }

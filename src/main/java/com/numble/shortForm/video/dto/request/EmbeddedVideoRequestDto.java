@@ -18,7 +18,7 @@ public class EmbeddedVideoRequestDto {
 
     private String description;
 
-    private MultipartFile thumbNail;
+    private MultipartFile thumbnail;
 
     private List<String> tags;
 

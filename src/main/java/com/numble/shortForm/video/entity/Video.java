@@ -3,9 +3,11 @@ package com.numble.shortForm.video.entity;
 import com.numble.shortForm.hashtag.entity.VideoHash;
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.video.dto.request.UpdateVideoDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 
@@ -18,6 +20,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 @Getter
+@DynamicUpdate
 public class Video extends BaseTime {
 
     @Id
@@ -73,5 +76,21 @@ public class Video extends BaseTime {
 
     public void addVideoHash(List<VideoHash> tags) {
         this.videoHashes = tags;
+    }
+
+    public void updateVideo(UpdateVideoDto dto,Thumbnail thumbnail,List<VideoHash> videoHashes) {
+
+        if(dto.getTitle()!=null)
+            this.title = dto.getTitle();
+        if(dto.getDescription()!=null)
+            this.description = dto.getDescription();
+        if(dto.getDuration()!=null)
+            this.duration = dto.getDuration();
+        if(thumbnail.getUrl()!=null && thumbnail.getName()!=null)
+            this.thumbnail =thumbnail;
+        if(videoHashes!=null)
+            this.videoHashes = videoHashes;
+        if(dto.getUrl()!=null)
+            this.videoUrl = dto.getUrl();
     }
 }

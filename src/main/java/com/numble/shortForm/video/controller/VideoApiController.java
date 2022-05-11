@@ -11,14 +11,17 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
+import com.numble.shortForm.video.dto.request.UpdateVideoDto;
 import com.numble.shortForm.video.dto.request.VideoCode;
 import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
+import com.numble.shortForm.video.entity.VideoType;
 import com.numble.shortForm.video.service.VideoService;
 import com.numble.shortForm.video.vimeo.Vimeo;
 import com.numble.shortForm.video.vimeo.VimeoException;
+import com.numble.shortForm.video.vimeo.VimeoLogic;
 import com.numble.shortForm.video.vimeo.VimeoResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -62,6 +65,7 @@ public class VideoApiController {
     private final VideoService videoService;
     private final AuthenticationFacade authenticationFacade;
     private final UsersRepository usersRepository;
+    private final VimeoLogic vimeoLogic;
 
     @Value("${vimeo.token}")
     private String vimeoToken;
@@ -102,41 +106,14 @@ public class VideoApiController {
 
         MultipartFile video = normalVideoRequestDto.getVideo();
         //비디오 파일 저장
-        File convertFile = new File(System.getProperty("user.dir") + "/" + video.getOriginalFilename());
-        if (convertFile.createNewFile()) {
-            log.info("createNewfile success");
-            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-                fos.write(video.getBytes());
-            } catch (Exception e) {
-                log.error(e.getMessage());
-            }
-        }
-            String videoEndPoint=null;
-            String url = null;
+        String videoEndpoint = vimeoLogic.uploadNormalVideo(video);
 
-        try {
-            Vimeo vimeo = new Vimeo(vimeoToken);
-             videoEndPoint = vimeo.addVideo(convertFile, false);
-
-//            VimeoResponse videoInfo = vimeo.getVideoInfo(videoEndPoint);
-//            JSONObject json = videoInfo.getJson();
-//            JSONObject obj =(JSONObject) json.get("embed");
-//
-//            url =obj.get("html").toString();
-
-        } catch (JSONException e) {
-            log.error("json error : {}",e);
-        }
-        finally {
-            convertFile.delete();
-        }
         Long userId = retrieveUserId();
         if (userId == 0L) {
             throw new CustomException(ErrorCode.NOT_FOUND_USER,"유효한 유저가 아닙니다.");
         }
-        VideoCode videoCode = new VideoCode(videoEndPoint,url);
-        log.info("video url  {}",videoCode.getUrl());
-        videoService.uploadDirectVideo(videoCode,normalVideoRequestDto,userId);
+
+        videoService.uploadDirectVideo(videoEndpoint,normalVideoRequestDto,userId);
 
         return ResponseEntity.ok("저장 완료");
 
@@ -246,6 +223,23 @@ public class VideoApiController {
         Long userId = retrieveUserId();
 
         return videoService.retrieveLikesVideos(pageable,userId);
+    }
+
+
+    @PutMapping("/update")
+    public ResponseEntity updateVideo(UpdateVideoDto updateVideoDto) throws IOException {
+
+        if (!retrieveUserId().equals(updateVideoDto.getUsersId())) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED,"비디오에 접근 권한이 없습니다.");
+        }
+
+        if (updateVideoDto.getType().equals(VideoType.upload)) {
+            videoService.updateUploadVideo(updateVideoDto);
+            return ResponseEntity.ok().body("변경완료");
+        }
+
+         videoService.updateEmbeddedVideo(updateVideoDto);
+        return ResponseEntity.ok().body("변경완료");
     }
 
     // ip 조회
