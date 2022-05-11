@@ -18,6 +18,8 @@ public enum ErrorCode {
     BAD_REQUEST_PARAM(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
     BAD_REQUEST_POST(HttpStatus.BAD_REQUEST, "글 입력값을 다시 확인하세요."),
 
+
+
     NONE_AUTHENTICATION_TOKEN(HttpStatus.BAD_REQUEST,"권한 정보가 없는 토큰입니다."),
     WRONG_TYPE_TOKEN(HttpStatus.BAD_REQUEST,"토큰의 타입이 틀렸습니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED,"만료된 토큰입니다."),

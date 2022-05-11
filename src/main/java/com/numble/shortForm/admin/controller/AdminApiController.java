@@ -26,6 +26,12 @@ public class AdminApiController {
     private final UsersRepository usersRepository;
     private final AuthenticationFacade authenticationFacade;
 
+    @GetMapping("/health")
+    public ResponseEntity checkHealth() {
+        log.info("health check");
+        return ResponseEntity.ok().body("");
+    }
+
     @ApiOperation(value = "Admin 유저 리스트 조회", notes = "page넘버 size 넘버 parameter로 넘겨야함 ")
     @GetMapping("/userList")
     public Page<UserAdminResponse> getUserList(@ModelAttribute PageDto pageDto) {
