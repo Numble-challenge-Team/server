@@ -95,7 +95,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        users.isNotNull()
+                        users.isNotNull(),
+                        video.videoType
                 )).from(video)
                 .leftJoin(video.users,users)
 //                .orderBy(video.created_at.desc())
@@ -152,7 +153,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        users.id.eq(userId)
+                        users.id.eq(userId),
+                        video.videoType
                 )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.title.contains(query).or(video.description.contains(query)))
@@ -189,7 +191,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        users.id.eq(userId)
+                        users.id.eq(userId),
+                        video.videoType
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
@@ -224,7 +227,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        video.isNull()
+                        video.isNull(),
+                        video.videoType
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
@@ -258,7 +262,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        users.id.eq(userId)
+                        users.id.eq(userId),
+                    video.videoType
                 )).from(video)
                 .leftJoin(video.users, users)
                 .where(video.id.in(videoids).or(video.isNotNull()).and(video.id.ne(videoId)))
@@ -284,7 +289,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.duration,
                         video.videoLikes.size(),
                         video.description,
-                        users.isNotNull()
+                        users.isNull(),
+                        video.videoType
                 )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.id.in(
@@ -293,7 +299,6 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                                 .from(videoLike)
                                 .where(videoLike.users.id.eq(userId))
                 ))
-                .where(users.id.eq(userId))
                 .offset(pageable.getPageNumber()* pageable.getPageSize())
                 .limit(pageable.getPageSize())
                 .orderBy(VideoSort.sort(pageable))
