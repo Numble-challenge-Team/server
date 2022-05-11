@@ -4,6 +4,9 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 
 @Getter
 public class CommentNumberResponse {
@@ -17,13 +20,17 @@ public class CommentNumberResponse {
     private Long commentSeq;
     private Long videoId;
     private Long commentCount;
+    private LocalDate created_at;
+    private Long LikeCount;
 
     @Setter
     private boolean isReComment;
 
     @QueryProjection
+
     public CommentNumberResponse(long id, String nickname, String context, String title, boolean isBlock, Long userId,
-                                 Long commentSeq, Long videoId, Long commentCount) {
+                                 Long commentSeq, Long videoId, Long commentCount, LocalDateTime created_at, Long LikeCount)
+    {
         this.id = id;
         this.nickname = nickname;
         this.context = context;
@@ -33,5 +40,7 @@ public class CommentNumberResponse {
         this.commentSeq = commentSeq;
         this.videoId = videoId;
         this.commentCount = commentCount;
+        this.created_at = created_at.toLocalDate();
+        this.LikeCount = LikeCount;
     }
 }

@@ -3,6 +3,7 @@ package com.numble.shortForm.comment.repository;
 import com.numble.shortForm.comment.dto.response.*;
 import com.numble.shortForm.comment.entity.QComment;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import java.util.List;
 
 import static com.numble.shortForm.comment.entity.QComment.comment;
 import static com.numble.shortForm.user.entity.QUsers.users;
-
+import static com.numble.shortForm.comment.entity.QCommentLike.commentLike;
 
 @RequiredArgsConstructor
 public class CommentCustomRepositoryImpl implements CommentCustomRepository{
@@ -31,7 +32,12 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.isBlock,
                 users.id,
                 comment.commentSeq,
-                comment.videoId
+                comment.videoId,
+                        comment.created_at,
+                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
+                        where(comment.id.eq(commentLike.comment.id)),"LikeCount"
+                )
+
         )).from(comment).where(comment.videoId.eq(videoId))
                 .innerJoin(comment.users, users)
                 .orderBy(comment.created_at.desc())
@@ -49,7 +55,11 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 comment.isBlock,
                 users.id,
                 comment.commentSeq,
-                comment.videoId
+                comment.videoId,
+                comment.created_at,
+                ExpressionUtils.as(JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
+                        where(comment.id.eq(commentLike.comment.id)),"LikeCount"
+                )
         )).from(comment).where(comment.commentSeq.eq(commentSeq)).fetch();
 
         return fetch;
@@ -76,6 +86,11 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                         JPAExpressions.select(bcomment.commentSeq.count())
                                 .from(bcomment).where(bcomment.commentSeq.eq(acomment.id)),
                         "commentCount"
+                ),
+                acomment.created_at,
+                ExpressionUtils.as(
+                        JPAExpressions.select(commentLike.comment.id.count()).from(commentLike).
+                                where(acomment.id.eq(commentLike.comment.id)),"LikeCount"
                 )
         )).from(acomment).where(acomment.videoId.eq(videoId)).fetch();
 

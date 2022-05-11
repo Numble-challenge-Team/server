@@ -12,8 +12,6 @@ import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
-import com.numble.shortForm.video.entity.Video;
-import com.numble.shortForm.video.entity.VideoLike;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

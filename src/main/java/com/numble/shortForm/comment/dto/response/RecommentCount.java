@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class recommentCount {
+public class RecommentCount {
     private Long commentId;
     private Long count;
 
