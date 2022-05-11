@@ -2,6 +2,7 @@ package com.numble.shortForm.comment.controller;
 
 import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
+import com.numble.shortForm.comment.dto.response.IsCommentLike;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.comment.service.CommentService;
@@ -152,7 +153,7 @@ public class CommentApiController {
         boolean LikeCheck = commentService.requestLikeComeent(userEmail, commentId);
 
 
-        return ResponseEntity.ok().body("ok");
+        return ResponseEntity.ok().body(new IsCommentLike(LikeCheck));
     }
 
     /*@GetMapping("test/{videoId}")
