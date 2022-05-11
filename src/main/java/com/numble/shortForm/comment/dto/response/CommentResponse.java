@@ -4,8 +4,9 @@ import com.querydsl.core.annotations.QueryProjection;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
+
 @Setter
+@Getter
 public class CommentResponse {
 
     private long id;
@@ -28,4 +29,6 @@ public class CommentResponse {
         this.commentSeq = commentSeq;
         this.videoId = videoId;
     }
+
+
 }

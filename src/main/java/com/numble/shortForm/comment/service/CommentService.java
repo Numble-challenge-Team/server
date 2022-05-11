@@ -1,6 +1,7 @@
 package com.numble.shortForm.comment.service;
 
 import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
+import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentCustomRepository;
@@ -11,9 +12,11 @@ import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -23,10 +26,10 @@ public class CommentService {
 
     public void createComment(Comment comment, Long usersId){
         Users users = usersRepository.findById(usersId).orElseThrow(()->
-                new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.")
+             new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.")
         );
 
-        Comment newComment = Comment.builder().
+        Comment newcoment = Comment.builder().
                 context(comment.getContext()).
                 title(comment.getTitle()).
                 videoId(comment.getVideoId()).
@@ -34,7 +37,11 @@ public class CommentService {
                 isBlock(false).
                 users(users).build();
 
-        commentRepository.save(newComment);
+        commentRepository.save(newcoment);
+
+        boolean createChek = false;
+
+
     }
 
     public List<CommentNumberResponse> testComment(Long videoId){
@@ -44,7 +51,7 @@ public class CommentService {
     }
 
     public List<CommentResponse> videoComment(Long videoId){
-        List<CommentResponse> responseList = commentRepository.commentPage(videoId);
+        List<CommentResponse> responseList = commentRepository.CommentPage(videoId);
 
         return responseList;
     }
@@ -65,13 +72,18 @@ public class CommentService {
         bfComment.setTitle(comment.getTitle());
 
         commentRepository.save(bfComment);
+        //commentRepository.deleteById(comment.getId());
+
         return true;
     }
 
     public void deleteComment(Long commentId, Long usersId){
         Users users = usersRepository.findById(usersId).orElseThrow(()->
-                new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다."));
+             new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다."));
 
         commentRepository.deleteById(commentId);
     }
+
+
+
 }

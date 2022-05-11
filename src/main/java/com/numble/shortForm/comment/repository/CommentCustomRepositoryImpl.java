@@ -1,11 +1,7 @@
 package com.numble.shortForm.comment.repository;
 
-import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
-import com.numble.shortForm.comment.dto.response.CommentResponse;
-import com.numble.shortForm.comment.dto.response.QCommentNumberResponse;
-import com.numble.shortForm.comment.dto.response.QCommentResponse;
+import com.numble.shortForm.comment.dto.response.*;
 import com.numble.shortForm.comment.entity.QComment;
-import com.numble.shortForm.user.entity.QUsers;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -20,22 +16,23 @@ import static com.numble.shortForm.user.entity.QUsers.users;
 @RequiredArgsConstructor
 public class CommentCustomRepositoryImpl implements CommentCustomRepository{
 
-
     private final JPAQueryFactory queryFactory;
+
+    //public CommentCustomRepositoryImpl() {queryFactory = null;}
 
 
     @Override
-    public List<CommentResponse> commentPage(Long videoId) {
+    public List<CommentResponse> CommentPage(Long videoId) {
         List<CommentResponse> fetch = queryFactory.select( new QCommentResponse(
-                        comment.id,
-                        users.nickname,
-                        comment.context,
-                        comment.title,
-                        comment.isBlock,
-                        users.id,
-                        comment.commentSeq,
-                        comment.videoId
-                )).from(comment).where(comment.videoId.eq(videoId))
+                comment.id,
+                users.nickname,
+                comment.context,
+                comment.title,
+                comment.isBlock,
+                users.id,
+                comment.commentSeq,
+                comment.videoId
+        )).from(comment).where(comment.videoId.eq(videoId))
                 .innerJoin(comment.users, users)
                 .orderBy(comment.created_at.desc())
                 .fetch();
@@ -82,13 +79,13 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository{
                 )
         )).from(acomment).where(acomment.videoId.eq(videoId)).fetch();
 
-        fetch.forEach( CommentNumberResponse -> {
-                    if(CommentNumberResponse.getCommentCount() == 0){
-                        CommentNumberResponse.setReComment(false);
-                    } else{
-                        CommentNumberResponse.setReComment(true);
-                    }
+        fetch.forEach( commentNumberResponse -> {
+                if(commentNumberResponse.getCommentCount() == 0){
+                    commentNumberResponse.setReComment(false);
+                } else{
+                    commentNumberResponse.setReComment(true);
                 }
+            }
         );
 
         return fetch;
