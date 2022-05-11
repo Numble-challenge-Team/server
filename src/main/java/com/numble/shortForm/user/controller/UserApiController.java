@@ -169,6 +169,8 @@ public class UserApiController {
     }
 
 
+
+
     // userid 조회
     private Long retrieveUserId() {
         String userEmail = authenticationFacade.getAuthentication().getName();
