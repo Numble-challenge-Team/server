@@ -1,6 +1,7 @@
 package com.numble.shortForm.video.entity;
 
 import com.numble.shortForm.hashtag.entity.VideoHash;
+import com.numble.shortForm.report.entity.Report;
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.video.dto.request.UpdateVideoDto;
@@ -60,6 +61,9 @@ public class Video extends BaseTime {
 
     @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
     private List<VideoLike> videoLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
+    private List<Report> reports  = new ArrayList<>();
 
     @Builder
     public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration,String videoCode) {
