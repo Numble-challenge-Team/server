@@ -1,9 +1,12 @@
 package com.numble.shortForm.comment.controller;
 
-import com.numble.shortForm.comment.dto.response.CommentNumberResponse;
+import com.numble.shortForm.comment.dto.request.ChildCommentRequestDto;
+import com.numble.shortForm.comment.dto.request.CommentRequestDto;
+import com.numble.shortForm.comment.dto.response.OriginalComment;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentRepository;
+import com.numble.shortForm.comment.service.CommentLikeService;
 import com.numble.shortForm.comment.service.CommentService;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
@@ -12,6 +15,7 @@ import com.numble.shortForm.response.Response;
 import com.numble.shortForm.security.AuthenticationFacade;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
+import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +30,7 @@ public class CommentApiController {
 
     private final AuthenticationFacade authenticationFacade;
     private final CommentService commentService;
+    private final CommentLikeService commentLikeService;
     private final UsersRepository usersRepository;
     private final CommentRepository commentRepository;
 
@@ -40,30 +45,52 @@ public class CommentApiController {
             @ApiResponse(code = 500, message = "서버 내부 에러", response = ErrorResponse.class)}
     )
     @PostMapping("/create")
-    public ResponseEntity<?> createComment(@RequestBody Comment comment){
+    public ResponseEntity<?> createComment(@RequestBody CommentRequestDto commentRequestDto){
 
         String userEmail = authenticationFacade.getAuthentication().getName();
 
-        Users user = usersRepository.findByEmail(userEmail).orElseThrow(()->
-                new CustomException(ErrorCode.NOT_FOUND_USER, "해당유저에 해당하는 토큰을 찾을 수 없습니."));
-        commentService.createComment(comment, user.getId());
+        commentService.createComment(commentRequestDto,userEmail);
 
 
-        return ResponseEntity.ok().body("ok");
+        return ResponseEntity.ok().body("댓글 생성완료");
     }
+
+    @PostMapping("/createChild")
+    public ResponseEntity<?> createComment(@RequestBody ChildCommentRequestDto commentRequestDto){
+
+        String userEmail = authenticationFacade.getAuthentication().getName();
+
+        commentService.createChildComment(commentRequestDto,userEmail);
+
+
+        return ResponseEntity.ok().body("댓글 생성완료");
+    }
+
+    @PostMapping("/like/{commentId}")
+    public ResponseEntity<?> requestLike(@PathVariable("commentId")Long commentId) {
+        String userEmail = authenticationFacade.getAuthentication().getName();
+
+        boolean bol = commentLikeService.requestLikeComment(userEmail, commentId);
+
+
+        return ResponseEntity.ok().body(new IsLikeResponse(bol));
+    }
+
+
+
     @ApiOperation(value = "video에 해당되는 댓글 불러오기", notes="<big>해당 비디오에 댓글이 있을 경우 List형태로 반환</big>")
     @ApiImplicitParam(name = "videoId", value = "해당비디오의 id값")
     @ApiResponses(
-            {@ApiResponse(code = 200, message = "ok", response = CommentNumberResponse.class),
+            {@ApiResponse(code = 200, message = "ok", response = OriginalComment.class),
                     @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
             }
     )
     @GetMapping("/commentList/{videoId}")
-    public List<CommentNumberResponse> CommentResponseList(@PathVariable("videoId") Long videoId){
-        List<CommentNumberResponse> commentList = commentService.testComment(videoId);
+    public List<OriginalComment> CommentResponseList(@PathVariable("videoId") Long videoId){
 
+        Long userId = retrieveUserId();
+        return commentService.getCommentList(videoId,userId);
 
-        return commentList;
     }
 
     @ApiOperation(value = "comment에 해당되는 댓글 불러오기", notes = "<big>해당 댓글에 대댓글이 있을 경우 List형태로 반환</big>")
@@ -72,11 +99,12 @@ public class CommentApiController {
             @ApiResponse(code = 200, message = "ok", response = CommentResponse.class),
             @ApiResponse(code = 500, message = "서버 에러", response = ErrorResponse.class)
     })
-    @GetMapping("/recomment/{commentSeq}")
-    public List<CommentResponse> recommentList(@PathVariable("commentSeq")long commentSeq){
-        List<CommentResponse> recommentlist = commentService.reComment(commentSeq);
+    @GetMapping("/getChild/{commentId}")
+    public List<OriginalComment> recommentList(@PathVariable("commentId")Long commentId){
+        Long userId = retrieveUserId();
+        return  commentService.getChildList(commentId,userId);
 
-        return recommentlist;
+
     }
 
     @ApiOperation(value = "comment 수정하기", notes = "<big>댓글을 수정할때 accessToken 입력필요</big>")
@@ -89,46 +117,54 @@ public class CommentApiController {
             @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
             @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
     })
-    @PatchMapping("/put")
-    public ResponseEntity<?> updateComment(@RequestBody Comment comment){
+    @PatchMapping("/update")
+    public ResponseEntity<?> updateComment(@RequestBody ChildCommentRequestDto childCommentRequestDto){
         String userEmail = authenticationFacade.getAuthentication().getName();
 
         Users user = usersRepository.findByEmail(userEmail).orElseThrow(() ->
                 new CustomException(ErrorCode.NOT_FOUND_USER, "해당유저를 찾을 수가 없습니다."));
 
-        boolean updateCheck = commentService.updateComment(comment, user.getId());
+        commentService.updateComment(user,childCommentRequestDto);
 
-        if(!updateCheck) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED, "댓글 작성자가 아닙니다.");
-        }
-        return ResponseEntity.ok().body("ok");
+        return ResponseEntity.ok().body("변경완료");
     }
-    @ApiOperation(value = "comment 삭제하기", notes = "<big>댓글을 삭제할때 accessToken 필요")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
-            @ApiImplicitParam(name = "commentId", value = "해당댓글의 id값")
-    })
-    @ApiResponses({
-            @ApiResponse(code = 200, message = "ok"),
-            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
-            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
-    })
-    @DeleteMapping("/auth/comment/{commentId}")
-    public ResponseEntity<?> deleteComment(@PathVariable("commentId")Long commentId){
+//    @ApiOperation(value = "comment 삭제하기", notes = "<big>댓글을 삭제할때 accessToken 필요")
+//    @ApiImplicitParams({
+//            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
+//            @ApiImplicitParam(name = "commentId", value = "해당댓글의 id값")
+//    })
+//    @ApiResponses({
+//            @ApiResponse(code = 200, message = "ok"),
+//            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
+//            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
+//    })
+//    @DeleteMapping("/auth/comment/{commentId}")
+//    public ResponseEntity<?> deleteComment(@PathVariable("commentId")Long commentId){
+//        String userEmail = authenticationFacade.getAuthentication().getName();
+//
+//        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() ->
+//                new CustomException(ErrorCode.NOT_FOUND_USER,"해당유저를 찾을 수가 없습니다"));
+//
+//        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+//                new CustomException(ErrorCode.BAD_REQUEST_PARAM,"잘못된 요청입니다."));
+//
+//        if(user.getId() != comment.getUsers().getId()){
+//            throw new CustomException(ErrorCode.ACCESS_DENIED,"댓글 작성자가 아닙니다.");
+//        }
+//
+//        commentService.deleteComment(commentId, user.getId());
+//
+//        return ResponseEntity.ok().body("ok");
+//    }
+
+    private Long retrieveUserId() {
         String userEmail = authenticationFacade.getAuthentication().getName();
-
-        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() ->
-                new CustomException(ErrorCode.NOT_FOUND_USER,"해당유저를 찾을 수가 없습니다"));
-
-        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
-                new CustomException(ErrorCode.BAD_REQUEST_PARAM,"잘못된 요청입니다."));
-
-        if(user.getId() != comment.getUsers().getId()){
-            throw new CustomException(ErrorCode.ACCESS_DENIED,"댓글 작성자가 아닙니다.");
+        if(userEmail.equals("anonymousUser")){
+            return 0L;
         }
-
-        commentService.deleteComment(commentId, user.getId());
-
-        return ResponseEntity.ok().body("ok");
+        Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
+            throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
+        });
+        return users.getId();
     }
 }
