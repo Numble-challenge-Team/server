@@ -4,7 +4,6 @@ import com.numble.shortForm.comment.dto.request.ChildCommentRequestDto;
 import com.numble.shortForm.comment.dto.request.CommentRequestDto;
 import com.numble.shortForm.comment.dto.response.OriginalComment;
 import com.numble.shortForm.comment.dto.response.CommentResponse;
-import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.comment.service.CommentLikeService;
 import com.numble.shortForm.comment.service.CommentService;
@@ -21,7 +20,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/comments/")
@@ -128,34 +129,32 @@ public class CommentApiController {
 
         return ResponseEntity.ok().body("변경완료");
     }
-//    @ApiOperation(value = "comment 삭제하기", notes = "<big>댓글을 삭제할때 accessToken 필요")
-//    @ApiImplicitParams({
-//            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
-//            @ApiImplicitParam(name = "commentId", value = "해당댓글의 id값")
-//    })
-//    @ApiResponses({
-//            @ApiResponse(code = 200, message = "ok"),
-//            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
-//            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
-//    })
-//    @DeleteMapping("/auth/comment/{commentId}")
-//    public ResponseEntity<?> deleteComment(@PathVariable("commentId")Long commentId){
-//        String userEmail = authenticationFacade.getAuthentication().getName();
-//
-//        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() ->
-//                new CustomException(ErrorCode.NOT_FOUND_USER,"해당유저를 찾을 수가 없습니다"));
-//
-//        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
-//                new CustomException(ErrorCode.BAD_REQUEST_PARAM,"잘못된 요청입니다."));
-//
-//        if(user.getId() != comment.getUsers().getId()){
-//            throw new CustomException(ErrorCode.ACCESS_DENIED,"댓글 작성자가 아닙니다.");
-//        }
-//
-//        commentService.deleteComment(commentId, user.getId());
-//
-//        return ResponseEntity.ok().body("ok");
-//    }
+    @ApiOperation(value = "comment 삭제하기", notes = "<big>댓글을 삭제할때 accessToken 필요")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "bearer token", value = "accessToken 값"),
+            @ApiImplicitParam(name = "commentId", value = "해당댓글의 id값")
+    })
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "ok"),
+            @ApiResponse(code = 403, message = "권한이 없음", response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "유저 NOT FOUND", response = ErrorResponse.class)
+    })
+    @DeleteMapping("/delete/{commentId}")
+    public ResponseEntity<?> deleteComment(@PathVariable("commentId")Long commentId){
+
+        Long userId = retrieveUserId();
+
+        boolean b = commentService.deleteComment(commentId,userId);
+
+        Map<String,String> result = new HashMap<>();
+
+        if(b==true)
+            result.put("complete","true");
+        else{
+            result.put("complete","false");
+        }
+        return ResponseEntity.ok().body(result);
+    }
 
     private Long retrieveUserId() {
         String userEmail = authenticationFacade.getAuthentication().getName();

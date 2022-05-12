@@ -3,7 +3,6 @@ package com.numble.shortForm.comment.service;
 import com.numble.shortForm.comment.dto.request.ChildCommentRequestDto;
 import com.numble.shortForm.comment.dto.request.CommentRequestDto;
 import com.numble.shortForm.comment.dto.response.OriginalComment;
-import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.entity.Comment;
 import com.numble.shortForm.comment.repository.CommentLikeRepository;
 import com.numble.shortForm.comment.repository.CommentRepository;
@@ -11,15 +10,15 @@ import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
-import com.numble.shortForm.video.dto.response.VideoResponseDto;
-import com.numble.shortForm.video.entity.Video;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CommentService {
 
     private final CommentRepository commentRepository;
@@ -111,36 +110,23 @@ public class CommentService {
         commentRepository.save(comment);
 
     }
-//
-//    public List<CommentResponse> videoComment(Long videoId){
-//        List<CommentResponse> responseList = commentRepository.commentPage(videoId);
-//
-//        return responseList;
-//    }
-//
-//    public List<CommentResponse> reComment(Long commentSeq){
-//        List<CommentResponse> responseList = commentRepository.recommentPage(commentSeq);
-//
-//        return responseList;
-//    }
-//
-//    public boolean updateComment(Comment comment, Long usersId){
-//        Users users = usersRepository.findById(usersId).orElseThrow(()-> new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다."));
-//
-//        Comment bfComment = commentRepository.findById(comment.getId()).orElseThrow(()->
-//                new CustomException(ErrorCode.BAD_REQUEST_PARAM,"댓글 정보가 잘못되었습니다."));
-//
-//        bfComment.setContext(comment.getContext());
-//        bfComment.setTitle(comment.getTitle());
-//
-//        commentRepository.save(bfComment);
-//        return true;
-//    }
-//
-//    public void deleteComment(Long commentId, Long usersId){
-//        Users users = usersRepository.findById(usersId).orElseThrow(()->
-//                new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다."));
-//
-//        commentRepository.deleteById(commentId);
-//    }
+
+    public boolean deleteComment(Long commentId,Long usersId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(
+                () -> new CustomException(ErrorCode.NOT_FOUND_COMMENT,"해당 댓글이 존재하지 않습니다."));
+
+        if (comment.getUsers().getId() != usersId)
+            throw new CustomException(ErrorCode.NOT_OWNER,"해당 댓글의 작성자가 아닙니다.");
+
+
+
+            commentRepository.deleteAllByCommentSeq(commentId);
+            commentRepository.delete(comment);
+
+            if(commentRepository.existsById(commentId))
+                return false;
+
+            return true;
+    }
+
 }
