@@ -6,6 +6,7 @@ import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.Response;
 import com.numble.shortForm.response.ResponseDto;
 import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.upload.S3Uploader;
 import com.numble.shortForm.user.dto.request.TestDto;
 import com.numble.shortForm.user.dto.request.UpdateUserRequestDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
@@ -17,11 +18,15 @@ import com.numble.shortForm.user.service.UserService;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 
@@ -35,6 +40,9 @@ public class UserApiController {
     private final UserService userService;
     private final UsersRepository usersRepository;
     private final AuthenticationFacade authenticationFacade;
+    private final S3Uploader s3Uploader;
+    private final static String IMAGE_TYPE ="profile";
+
 
     @ApiOperation(value = "회원가입", notes = "<big>로그인에 성공하면, accessToken, RefreshToken 반환</big>")
     @ApiResponses({
@@ -142,6 +150,20 @@ public class UserApiController {
         userService.signOut(userId);
 
         return Response.success("true", "탈퇴되없습니다.", HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "이미지 가져오기", notes = "profile 이미지 가져오기,원본 파일 네임 넘겨주시면 됩니다.")
+    @GetMapping("/retrieveImg/{filename}")
+    public ResponseEntity<Resource> updateForm(@PathVariable("filename")String filename, HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+
+        Resource resource = s3Uploader.getObject(filename,IMAGE_TYPE);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
+        headers.add("Content-type","image/png");
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+
     }
 
     @ApiOperation(value = "프로필 조회",notes ="토큰 필요" )
