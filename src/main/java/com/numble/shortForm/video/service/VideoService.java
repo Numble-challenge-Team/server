@@ -14,7 +14,6 @@ import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
 import com.numble.shortForm.video.dto.request.UpdateVideoDto;
-import com.numble.shortForm.video.dto.request.VideoCode;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
@@ -23,12 +22,10 @@ import com.numble.shortForm.video.repository.RecordVideoRepository;
 import com.numble.shortForm.video.repository.VideoLikeRepository;
 import com.numble.shortForm.video.repository.VideoRepository;
 import com.numble.shortForm.video.vimeo.Vimeo;
-import com.numble.shortForm.video.vimeo.VimeoException;
 import com.numble.shortForm.video.vimeo.VimeoLogic;
 import com.numble.shortForm.video.vimeo.VimeoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -38,10 +35,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -135,7 +129,7 @@ public class VideoService {
 
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
-                .comments(commentService.testComment(videoId))
+                .comments(commentService.getCommentList(videoId,0L))
                 .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,0L))
                 .build();
     }
@@ -179,7 +173,7 @@ public class VideoService {
 
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
-                .comments(commentService.testComment(videoId))
+                .comments(commentService.getCommentList(videoId,userId))
                 .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,userId))
                 .build();
     }
@@ -417,6 +411,21 @@ public class VideoService {
         Video updateVideo = reFreshVideo(video, updateVideoDto);
         videoRepository.save(updateVideo);
     }
-    
-    
+
+
+    public boolean deleteVideo(Long videoId, Long userId) {
+
+        Video video = videoRepository.findById(videoId).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_VIDEO));
+
+        if (video.getUsers().getId() != userId) {
+            throw new CustomException(ErrorCode.NOT_OWNER,"주인이 아닙니다.");
+        }
+
+        videoRepository.delete(video);
+
+        if (videoRepository.existsById(videoId)) {
+            return false;
+        }
+        return true;
+    }
 }

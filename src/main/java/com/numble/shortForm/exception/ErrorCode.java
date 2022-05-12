@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    NOT_OWNER(HttpStatus.FORBIDDEN,"해당 글의 권한이 없습니다"),
+    NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
     NON_LOGIN(HttpStatus.BAD_REQUEST,"로그인 된 상태가 아닙니다."),
     EXPIRE_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 만료되었습니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND,"해당하는 유저가 존재하지 않습니다"),

@@ -31,6 +31,6 @@ public class VideoSort {
                 }
             }
         }
-        return new OrderSpecifier<>(Order.ASC,video.created_at);
+        return new OrderSpecifier<>(Order.DESC,video.created_at);
     }
 }
