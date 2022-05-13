@@ -35,7 +35,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .cors().configurationSource(request -> {
                     var cors = new CorsConfiguration();
-                    cors.setAllowedOrigins(List.of("http://localhost:3000"));
+                    cors.setAllowedOrigins(List.of("http://localhost:3000","https://ourszoo.site"));
                     cors.setAllowedMethods(List.of("GET","POST", "PUT", "DELETE", "OPTIONS"));
                     cors.setAllowedHeaders(List.of("*"));
                     return cors;
@@ -47,7 +47,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers("/api/v1/users/reissue").permitAll()
-                .antMatchers("/api/v1/users/update","/api/v1/users/profile","/api/v1/videos/likesVideos","/api/v1/users/test",
+                .antMatchers("/api/v1/comments/update ","/api/v1/comments/create","/api/v1/comments/createChild","/api/v1/comments/like/**",
+                        "/api/v1/users/update","/api/v1/users/profile","/api/v1/videos/likesVideos","/api/v1/users/test",
                         "/api/v1/videos/upload/embedded","/api/v1/videos/like/**","/api/v1/videos/retrieve/myVideo").hasRole("USER")
                 .anyRequest().permitAll()
                 .and()

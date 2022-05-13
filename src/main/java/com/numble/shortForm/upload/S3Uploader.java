@@ -1,19 +1,24 @@
 package com.numble.shortForm.upload;
 
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.*;
+import com.amazonaws.util.IOUtils;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.net.http.HttpHeaders;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,24 +36,23 @@ public class S3Uploader {
 
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new CustomException(ErrorCode.FILE_CONVERT_ERROR));
-        return upload(uploadFile,dirName);
+        return upload(uploadFile, dirName);
     }
 
     public String upload(File uploadFile, String filePath) {
-        String fileName = filePath+"/"+ UUID.randomUUID()+uploadFile.getName();
-        String uploadImageUrl  = pusS3(uploadFile,fileName);
+        String fileName = filePath + "/" + UUID.randomUUID() + uploadFile.getName();
+        String uploadImageUrl = pusS3(uploadFile, fileName);
 
         removeNewFile(uploadFile);
         return uploadImageUrl;
     }
 
 
-
     private String pusS3(File uploadFile, String fileName) {
         // withCannedAcl 권한을 부여하는것. public으로 지정
-        amazonS3Client.putObject(new PutObjectRequest(bucket,fileName,uploadFile).withCannedAcl(CannedAccessControlList.PublicRead));
-        log.info("pustS3 메서드 fileName {}",fileName );
-        return amazonS3Client.getUrl(bucket,fileName).toString();
+        amazonS3Client.putObject(new PutObjectRequest(bucket, fileName, uploadFile).withCannedAcl(CannedAccessControlList.PublicRead));
+        log.info("pustS3 메서드 fileName {}", fileName);
+        return amazonS3Client.getUrl(bucket, fileName).toString();
     }
 
 
@@ -62,7 +66,7 @@ public class S3Uploader {
 
 
     private Optional<File> convert(MultipartFile file) throws IOException {
-        File convertFile = new File(System.getProperty("user.dir")+"/",file.getOriginalFilename());
+        File convertFile = new File(System.getProperty("user.dir") + "/", file.getOriginalFilename());
         if (convertFile.createNewFile()) {
             log.info("createNewfile success");
             try (FileOutputStream fos = new FileOutputStream(convertFile)) {
@@ -74,4 +78,15 @@ public class S3Uploader {
         }
         return Optional.empty();
     }
+
+
+    public Resource getObject(String storedFileName,String type) throws IOException {
+        S3Object o = amazonS3Client.getObject(new GetObjectRequest(bucket + "/"+type , storedFileName));
+        S3ObjectInputStream objectInputStream = o.getObjectContent();
+        byte[] bytes = IOUtils.toByteArray(objectInputStream);
+        Resource resource = new ByteArrayResource(bytes);
+        return resource;
+    }
+
 }
+

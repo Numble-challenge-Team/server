@@ -1,5 +1,8 @@
 package com.numble.shortForm.user.entity;
 
+import com.numble.shortForm.comment.entity.Comment;
+import com.numble.shortForm.comment.entity.CommentLike;
+import com.numble.shortForm.report.entity.Report;
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.dto.request.UpdateUserRequestDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
@@ -44,11 +47,21 @@ public class Users extends BaseTime implements UserDetails {
     @Embedded
     private ProfileImg profileImg;
 
-    @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "users",cascade = CascadeType.REMOVE)
     private List<Video> videos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "users",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "users",cascade = CascadeType.REMOVE)
     private List<VideoLike> videoLikes  = new ArrayList<>();
+
+    @OneToMany(mappedBy = "users",cascade = CascadeType.REMOVE)
+    private List<CommentLike> commentLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "users",cascade = CascadeType.REMOVE)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "users",cascade = CascadeType.REMOVE)
+    private List<Report> reports = new ArrayList<>();
+
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(joinColumns = @JoinColumn(name = "USERS_ID"))

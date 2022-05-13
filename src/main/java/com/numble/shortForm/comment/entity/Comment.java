@@ -2,12 +2,16 @@ package com.numble.shortForm.comment.entity;
 
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.video.entity.VideoLike;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import static javax.persistence.GenerationType.IDENTITY;
 import static lombok.AccessLevel.PROTECTED;
@@ -15,6 +19,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 @Getter
+@DynamicUpdate
 public class Comment extends BaseTime {
 
     @Id
@@ -22,10 +27,8 @@ public class Comment extends BaseTime {
     @Column(name = "comment_id")
     private Long  id;
 
-    @Setter
     private String title;
 
-    @Setter
     private String context;
 
     @Column(name = "video_id")
@@ -40,6 +43,10 @@ public class Comment extends BaseTime {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private Users users;
+
+
+    @OneToMany(mappedBy ="comment",cascade = CascadeType.REMOVE)
+    private List<CommentLike> commentLikes = new ArrayList<>() ;
 
     @Override
     public LocalDateTime getCreated_at() {
@@ -60,5 +67,14 @@ public class Comment extends BaseTime {
         this.commentSeq = commentSeq;
         this.isBlock = isBlock;
         this.users = users;
+    }
+
+    public void updateComment(String title, String context) {
+        if(!title.isEmpty())
+            this.title =title;
+
+        if(!context.isEmpty())
+            this.context =context;
+
     }
 }

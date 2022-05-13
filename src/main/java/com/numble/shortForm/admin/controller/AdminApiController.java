@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -35,9 +36,10 @@ public class AdminApiController {
 
     @ApiOperation(value = "Admin 유저 리스트 조회", notes = "page넘버 size 넘버 parameter로 넘겨야함 ")
     @GetMapping("/userList")
-    public Page<UserAdminResponse> getUserList(@ModelAttribute PageDto pageDto) {
-        Page<UserAdminResponse> userList = usersRepository.getUserList(pageDto);
+    public Page<UserAdminResponse> getUserList(Pageable pageable) {
+//        Page<UserAdminResponse> userList = usersRepository.getUserList(pageable);
 
-        return userList;
+//        return userList;
+        return null;
     }
 }
