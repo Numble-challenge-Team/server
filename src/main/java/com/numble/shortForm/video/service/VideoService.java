@@ -7,7 +7,7 @@ import com.numble.shortForm.hashtag.entity.HashTag;
 import com.numble.shortForm.hashtag.entity.VideoHash;
 import com.numble.shortForm.hashtag.repository.VideoHashRepository;
 import com.numble.shortForm.hashtag.service.HashTagService;
-import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.upload.S3Uploader;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;

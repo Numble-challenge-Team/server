@@ -42,7 +42,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.view,
                         video.created_at,
                         video.duration,
-                        video.videoLikes.size()
+                        video.videoLikes.size(),
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users,users)
                 .orderBy(video.showId.desc())
@@ -70,7 +71,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 video.description,
                 users.id.eq(userId),
                 video.videoType,
-                video.videoUrl
+                video.videoUrl,
+                users.profileImg
         )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.id.eq(videoId))
@@ -96,7 +98,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         users.isNotNull(),
-                        video.videoType
+                        video.videoType,
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users,users)
 //                .orderBy(video.created_at.desc())
@@ -117,7 +120,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.view,
                         video.created_at,
                         video.duration,
-                        video.videoLikes.size()
+                        video.videoLikes.size(),
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users, users)
                 .where(users.email.eq(userEmail))
@@ -154,7 +158,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         users.id.eq(userId),
-                        video.videoType
+                        video.videoType,
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.title.contains(query).or(video.description.contains(query)))
@@ -192,7 +197,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         users.id.eq(userId),
-                        video.videoType
+                        video.videoType,
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
@@ -228,7 +234,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         video.isNull(),
-                        video.videoType
+                        video.videoType,
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users, users)
                 .orderBy(VideoSort.sort(pageable))
@@ -263,7 +270,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         users.id.eq(userId),
-                    video.videoType
+                    video.videoType,
+                users.profileImg
                 )).from(video)
                 .leftJoin(video.users, users)
                 .where(video.id.in(videoids).or(video.isNotNull()).and(video.id.ne(videoId)))
@@ -290,7 +298,8 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                         video.videoLikes.size(),
                         video.description,
                         users.isNull(),
-                        video.videoType
+                        video.videoType,
+                        users.profileImg
                 )).from(video)
                 .leftJoin(video.users,users)
                 .where(video.id.in(

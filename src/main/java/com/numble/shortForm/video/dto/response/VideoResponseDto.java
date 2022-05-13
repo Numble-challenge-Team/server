@@ -1,5 +1,6 @@
 package com.numble.shortForm.video.dto.response;
 
+import com.numble.shortForm.user.entity.ProfileImg;
 import com.numble.shortForm.video.entity.Thumbnail;
 import com.numble.shortForm.video.entity.VideoType;
 import com.querydsl.core.annotations.QueryProjection;
@@ -21,6 +22,8 @@ public class VideoResponseDto {
     private Long videoId;
 
     private Long usersId;
+
+    private ProfileImg profileImg;
 
     private VideoType videoType;
 
@@ -60,7 +63,7 @@ public class VideoResponseDto {
     }
 
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes,ProfileImg profileImg) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
@@ -72,11 +75,11 @@ public class VideoResponseDto {
         this.created_at = created_at.toLocalDate();
         this.duration = duration;
         this.likes = likes.longValue();
-
+        this.profileImg =profileImg;
 
     }
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner,VideoType videoType) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner,VideoType videoType,ProfileImg profileImg) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
@@ -91,11 +94,11 @@ public class VideoResponseDto {
         this.description = description;
         this.videoType = videoType;
         this.isOwner = isOwner;
-
+        this.profileImg =profileImg;
     }
 
     @QueryProjection
-    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner,VideoType videoType,String url) {
+    public VideoResponseDto(Long videoId, Long usersId, String nickname, Long showId, String title, Thumbnail thumbnail, boolean isBlock, Long view, LocalDateTime created_at, Long duration, Integer likes, String description,boolean isOwner,VideoType videoType,String url,ProfileImg profileImg) {
         this.videoId = videoId;
         this.usersId = usersId;
         this.nickname = nickname;
@@ -111,5 +114,6 @@ public class VideoResponseDto {
         this.isOwner = isOwner;
         this.videoType = videoType;
         this.url = url;
+        this.profileImg =profileImg;
     }
 }
