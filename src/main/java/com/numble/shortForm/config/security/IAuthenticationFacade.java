@@ -1,4 +1,4 @@
-package com.numble.shortForm.security;
+package com.numble.shortForm.config.security;
 
 import org.springframework.security.core.Authentication;
 

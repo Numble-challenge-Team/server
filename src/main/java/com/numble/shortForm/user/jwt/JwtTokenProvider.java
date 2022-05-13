@@ -38,7 +38,7 @@ public class JwtTokenProvider {
     private static final String BEARER_TYPE ="Bearer";
 //    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 10 *1000L;
 
-    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 7 * 24* 60 *1000L; //30 Minutes
+    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 60*60 *1000L; //30 Minutes
     private static final Long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 *1000L; //7 days
 
     private final Key key;
@@ -141,10 +141,36 @@ public class JwtTokenProvider {
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token {}", e);
-        }catch (UnsupportedJwtException e) {
+        }
+        catch (UnsupportedJwtException e) {
             log.info("UnSupproted JWT Token {}", e);
+
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty {}",e);
+
+        }
+        return false;
+    }
+
+    public boolean validationTokenIn(String token) throws ExpiredJwtException{
+        log.info("access-token : {}" ,token);
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token {}", e);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+
+        }catch (ExpiredJwtException e){
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+        catch (UnsupportedJwtException e) {
+            log.info("UnSupproted JWT Token {}", e);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+
+        } catch (IllegalArgumentException e) {
+            log.info("JWT claims string is empty {}",e);
+
         }
         return false;
     }
@@ -158,6 +184,24 @@ public class JwtTokenProvider {
             log.info("Invalid JWT Token {}", e);
         }catch (ExpiredJwtException e){
             request.setAttribute("exception",ErrorCode.EXPIRED_TOKEN.getDetail());
+        }
+        catch (UnsupportedJwtException e) {
+            log.info("UnSupproted JWT Token {}", e);
+        } catch (IllegalArgumentException e) {
+            log.info("JWT claims string is empty {}",e);
+        }
+        log.info("해당하지 않음");
+        return false;
+    }
+    public boolean refreshValidation(String token) {
+
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.info("Invalid JWT Token {}", e);
+        }catch (ExpiredJwtException e){
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE);
         }
         catch (UnsupportedJwtException e) {
             log.info("UnSupproted JWT Token {}", e);
