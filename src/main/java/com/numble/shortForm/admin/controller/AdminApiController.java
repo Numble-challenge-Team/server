@@ -1,10 +1,10 @@
 package com.numble.shortForm.admin.controller;
 
 import com.numble.shortForm.admin.response.UserAdminResponse;
-import com.numble.shortForm.request.PageDto;
-import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.user.service.UserService;
+import com.numble.shortForm.video.dto.response.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,19 +26,14 @@ public class AdminApiController {
     private final UsersRepository usersRepository;
     private final AuthenticationFacade authenticationFacade;
 
-    @GetMapping("/health")
-    public ResponseEntity checkHealth() {
-        log.info("health check");
-        log.info("video redirect ok!");
-        return ResponseEntity.ok().body("");
-    }
+
 
     @ApiOperation(value = "Admin 유저 리스트 조회", notes = "page넘버 size 넘버 parameter로 넘겨야함 ")
     @GetMapping("/userList")
-    public Page<UserAdminResponse> getUserList(Pageable pageable) {
-//        Page<UserAdminResponse> userList = usersRepository.getUserList(pageable);
+    public ResponseEntity<?> getUserList(Pageable pageable) {
 
-//        return userList;
-        return null;
+       Result result = userService.getUserList(pageable);
+
+         return ResponseEntity.ok().body(result);
     }
 }

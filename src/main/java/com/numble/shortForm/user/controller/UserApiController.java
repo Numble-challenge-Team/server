@@ -1,16 +1,15 @@
 package com.numble.shortForm.user.controller;
 
+import com.numble.shortForm.config.security.UserLibrary;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.Response;
 import com.numble.shortForm.response.ResponseDto;
-import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.upload.S3Uploader;
-import com.numble.shortForm.user.dto.request.TestDto;
 import com.numble.shortForm.user.dto.request.UpdateUserRequestDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
-import com.numble.shortForm.user.dto.response.UserProfileDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
@@ -22,7 +21,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +38,7 @@ public class UserApiController {
     private final UserService userService;
     private final UsersRepository usersRepository;
     private final AuthenticationFacade authenticationFacade;
+    private final UserLibrary userLibrary;
     private final S3Uploader s3Uploader;
     private final static String IMAGE_TYPE ="profile";
 
@@ -142,7 +141,7 @@ public class UserApiController {
     @DeleteMapping("/sign-out")
     public ResponseEntity signOut() {
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
 
         if (userId == 0L) {
             throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN,"유저 정보가 일치하지 않습니다.");
@@ -170,7 +169,7 @@ public class UserApiController {
     @GetMapping("/profile")
     public ResponseEntity getProfile() {
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
 
         if (userId == 0L) {
             throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN,"유저 정보가 일치하지 않습니다.");
@@ -180,7 +179,7 @@ public class UserApiController {
 
     @PutMapping("/update")
     public ResponseEntity updateProfile(UpdateUserRequestDto updateUserRequestDto) throws IOException {
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
 
         if (userId == 0L) {
             throw new CustomException(ErrorCode.NONE_AUTHENTICATION_TOKEN,"유저 정보가 일치하지 않습니다.");
@@ -193,15 +192,5 @@ public class UserApiController {
 
 
 
-    // userid 조회
-    private Long retrieveUserId() {
-        String userEmail = authenticationFacade.getAuthentication().getName();
-        if(userEmail.equals("anonymousUser")){
-            return 0L;
-        }
-        Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
-            throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
-        });
-        return users.getId();
-    }
+
 }

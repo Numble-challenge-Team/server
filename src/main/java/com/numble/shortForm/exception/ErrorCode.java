@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    NOT_ENOGH_HEADER(HttpStatus.BAD_REQUEST,"헤더를 확인해주세요"),
+    REFRESH_TOKEN_EXPIRE(HttpStatus.FORBIDDEN,"리프레쉬 토큰 만료됐습니다. 다시 로그인해주세요"),
+    EXIST_REPORT(HttpStatus.FORBIDDEN,"신고는 한번만 가능합니다"),
     NOT_OWNER(HttpStatus.FORBIDDEN,"해당 글의 권한이 없습니다"),
     NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
     NON_LOGIN(HttpStatus.BAD_REQUEST,"로그인 된 상태가 아닙니다."),

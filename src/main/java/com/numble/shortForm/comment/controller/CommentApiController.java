@@ -7,11 +7,12 @@ import com.numble.shortForm.comment.dto.response.CommentResponse;
 import com.numble.shortForm.comment.repository.CommentRepository;
 import com.numble.shortForm.comment.service.CommentLikeService;
 import com.numble.shortForm.comment.service.CommentService;
+import com.numble.shortForm.config.security.UserLibrary;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.Response;
-import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.response.IsLikeResponse;
@@ -33,6 +34,7 @@ public class CommentApiController {
     private final CommentService commentService;
     private final CommentLikeService commentLikeService;
     private final UsersRepository usersRepository;
+    private final UserLibrary userLibrary;
     private final CommentRepository commentRepository;
 
     @ApiOperation(value = "댓글작성", notes = "<big>댓글 작성에 성공하면, ok 반환</big>")
@@ -56,6 +58,7 @@ public class CommentApiController {
         return ResponseEntity.ok().body("댓글 생성완료");
     }
 
+    @ApiOperation(value = "대댓글작성", notes = "")
     @PostMapping("/createChild")
     public ResponseEntity<?> createComment(@RequestBody ChildCommentRequestDto commentRequestDto){
 
@@ -89,7 +92,7 @@ public class CommentApiController {
     @GetMapping("/commentList/{videoId}")
     public List<OriginalComment> CommentResponseList(@PathVariable("videoId") Long videoId){
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
         return commentService.getCommentList(videoId,userId);
 
     }
@@ -102,7 +105,7 @@ public class CommentApiController {
     })
     @GetMapping("/getChild/{commentId}")
     public List<OriginalComment> recommentList(@PathVariable("commentId")Long commentId){
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
         return  commentService.getChildList(commentId,userId);
 
 
@@ -142,28 +145,20 @@ public class CommentApiController {
     @DeleteMapping("/delete/{commentId}")
     public ResponseEntity<?> deleteComment(@PathVariable("commentId")Long commentId){
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
 
         boolean b = commentService.deleteComment(commentId,userId);
 
         Map<String,String> result = new HashMap<>();
 
-        if(b==true)
+        if(b == true)
             result.put("complete","true");
         else{
             result.put("complete","false");
         }
+
         return ResponseEntity.ok().body(result);
     }
 
-    private Long retrieveUserId() {
-        String userEmail = authenticationFacade.getAuthentication().getName();
-        if(userEmail.equals("anonymousUser")){
-            return 0L;
-        }
-        Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
-            throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
-        });
-        return users.getId();
-    }
+
 }

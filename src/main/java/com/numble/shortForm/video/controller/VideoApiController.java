@@ -1,69 +1,46 @@
 package com.numble.shortForm.video.controller;
 
+import com.numble.shortForm.config.security.UserLibrary;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.exception.ServerErrorResponse;
-import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.response.Response;
-import com.numble.shortForm.security.AuthenticationFacade;
+import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.upload.S3Uploader;
 import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.user.jwt.JwtTokenProvider;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.request.EmbeddedVideoRequestDto;
 import com.numble.shortForm.video.dto.request.NormalVideoRequestDto;
 import com.numble.shortForm.video.dto.request.UpdateVideoDto;
-import com.numble.shortForm.video.dto.request.VideoCode;
 import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
 import com.numble.shortForm.video.entity.VideoType;
 import com.numble.shortForm.video.service.VideoService;
-import com.numble.shortForm.video.vimeo.Vimeo;
 import com.numble.shortForm.video.vimeo.VimeoException;
 import com.numble.shortForm.video.vimeo.VimeoLogic;
-import com.numble.shortForm.video.vimeo.VimeoResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/videos/")
@@ -76,41 +53,11 @@ public class VideoApiController {
     private final AuthenticationFacade authenticationFacade;
     private final UsersRepository usersRepository;
     private final VimeoLogic vimeoLogic;
-    private final S3Uploader s3Uploader;
+    private final UserLibrary userLibrary;
     private static final String IMAGE_TYPE ="thumbnail";
-
-
-    @Value("${vimeo.token}")
-    private String vimeoToken;
-
-
-//    @GetMapping("/check")
-//    public ResponseEntity checkVideo(@Param("url") String url,@Param("keyword") String keyword) throws IOException {
-//
-//        Vimeo vimeo = new Vimeo(vimeoToken);
-//        VimeoResponse videoInfo = vimeo.getVideoInfo(url);
-//        JSONObject json = videoInfo.getJson();
-//        JSONObject obj =(JSONObject) json.get("embed");
-//
-//        System.out.println(obj.get("html"));
-//        System.out.println(obj);
-//
-//
-////        Iterator<String> keys = json.keys();
-////
-////        ArrayList<String> keyList = new ArrayList<>();
-////        while(keys.hasNext()) {
-////            String key = keys.next().toString();
-////            Object o = json.get(key);
-////            System.out.println(key+": "+ o);
-////            keyList.add(key);
-////        }
-//
-//
-//
-//        return ResponseEntity.ok().body(obj);
-//    }
-
+    private final JwtTokenProvider jwtTokenProvider;
+    private static final String AUTHORIZATION_HEADER ="Authorization";
+    private static final String BEARER_TYPE  ="Bearer";
 
 
     @ApiOperation(value = "일반동영상 업로드", notes = "")
@@ -121,7 +68,7 @@ public class VideoApiController {
         //비디오 파일 저장
         String videoEndpoint = vimeoLogic.uploadNormalVideo(video);
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
         if (userId == 0L) {
             throw new CustomException(ErrorCode.NOT_FOUND_USER,"유효한 유저가 아닙니다.");
         }
@@ -143,6 +90,9 @@ public class VideoApiController {
     @PostMapping("/upload/embedded")
     public ResponseEntity<?> uploadEmbeddedVideo(@ModelAttribute EmbeddedVideoRequestDto embeddedVideoRequestDto) throws IOException {
 
+        log.info("embedded dto {}",embeddedVideoRequestDto);
+        log.info("thumb {}",embeddedVideoRequestDto.getThumbnail().isEmpty());
+
         String userEmail = authenticationFacade.getAuthentication().getName();
 
         Users users = usersRepository.findByEmail(userEmail).orElseThrow(() ->
@@ -154,9 +104,13 @@ public class VideoApiController {
     }
 
     @GetMapping("/main")
-    public Result mainVideoList( Pageable pageable) {
+    public Result mainVideoList(Pageable pageable,HttpServletRequest request) {
+        // header에서 guest 유무 확인
 
-        Long userId = retrieveUserId();
+        checkToken(request);
+
+        Long userId=userLibrary.retrieveUserId();
+
         if (userId == 0L) {
             log.info("로그인 안됌");
             return videoService.retrieveMainVideoListNotLogin(pageable);
@@ -169,15 +123,16 @@ public class VideoApiController {
 
     @ApiOperation(value = "비디오 상세페이지", notes = "비디오 Id 값을 기준으로 조회")
     @GetMapping("/retrieve/{videoId}")
-    public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId) throws IOException {
-//        comment 개발후 작성
-        String ip = getIp();
-        Long userId = retrieveUserId();
+    public VideoDetailResponseDto retrieveVideoDetail(@PathVariable(name = "videoId") Long videoId,HttpServletRequest request) throws IOException {
 
+        checkToken(request);
+
+        String ip = getIp();
+        Long userId = userLibrary.retrieveUserId();
         if (userId == 0L) {
             return videoService.retrieveDetailNotLogin(videoId,ip);
         }
-
+        log.info("로그인한 detail");
         return videoService.retrieveDetail(videoId,ip,userId);
 
     }
@@ -207,7 +162,7 @@ public class VideoApiController {
     @GetMapping("/search")
     public Result searchVideo(@RequestParam String query,Pageable pageable) {
 
-        return videoService.searchVideoQuery(query,pageable,retrieveUserId());
+        return videoService.searchVideoQuery(query,pageable,userLibrary.retrieveUserId());
 
     }
 
@@ -215,13 +170,16 @@ public class VideoApiController {
     @ApiOperation(value = "관심 동영상 리스트 반환", notes = "유저의 시청기록을 기반으로 관심영상 반환,아직 개발중")
     @GetMapping("/concernVideo/{videoId}")
     public Page<VideoResponseDto> getConcernVideo(Pageable pageable,@PathVariable("videoId")Long videoId ) {
-            return videoService.retrieveConcernVideosNotLogin(pageable,videoId,retrieveUserId());
+            return videoService.retrieveConcernVideosNotLogin(pageable,videoId,userLibrary.retrieveUserId());
     }
+
+
+
 
     @ApiOperation(value = "유저가 좋아요한 비디오 리스트", notes = "유저가 좋아요한 비디오의 리시트, 토큰값 필요")
     @GetMapping("/likesVideos")
     public Result getLikesVideos(Pageable pageable) {
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
 
         return videoService.retrieveLikesVideos(pageable,userId);
     }
@@ -240,27 +198,46 @@ public class VideoApiController {
 //
 //    }
 
+    @GetMapping("/record")
+    public ResponseEntity retrieveRecord(Pageable pageable) {
+//        Long userId = userLibrary.retrieveUserId();
+//        if (userId == 0L) {
+//            throw new RuntimeException();
+//        }
+//        List<RecordVideo> recordVideos = videoService.retrieveRecord(pageable, userId);
+
+        return ResponseEntity.ok().body("recordVideos");
+
+    }
+
     @ApiOperation(value = "영상 정보수정", notes = "업데이트 안할 필드는 , 빼주시면 됩니다.")
     @PutMapping("/update")
-    public ResponseEntity updateVideo(UpdateVideoDto updateVideoDto) throws IOException {
+    public ResponseEntity updateVideo(@ModelAttribute UpdateVideoDto updateVideoDto) throws IOException {
 
-        if (!retrieveUserId().equals(updateVideoDto.getUsersId())) {
+        log.info("dto {}",updateVideoDto);
+        log.info("thumbnail {}",updateVideoDto.getThumbnail().isEmpty());
+        log.info("tags {}",updateVideoDto.getTags().isEmpty());
+        log.info("title {}",updateVideoDto.getTitle().isEmpty());
+
+        if (!userLibrary.retrieveUserId().equals(updateVideoDto.getUsersId())) {
             throw new CustomException(ErrorCode.ACCESS_DENIED, "비디오에 접근 권한이 없습니다.");
         }
 
         if (updateVideoDto.getType().equals(VideoType.upload)) {
+            log.info("uplaod type");
             videoService.updateUploadVideo(updateVideoDto);
             return ResponseEntity.ok().body("변경완료");
         }
 
         videoService.updateEmbeddedVideo(updateVideoDto);
+        log.info("emebedded ");
         return ResponseEntity.ok().body("변경완료");
     }
 
     @DeleteMapping("/delete/{videoId}")
     public ResponseEntity deleteVideo(@PathVariable("videoId")Long videoId) {
 
-        Long userId = retrieveUserId();
+        Long userId = userLibrary.retrieveUserId();
         if (userId == 0L)
             throw new CustomException(ErrorCode.NOT_OWNER,"로그인 상태가 아닙니다.");
 
@@ -269,7 +246,26 @@ public class VideoApiController {
         return ResponseEntity.ok().body("삭제 완료");
     }
 
+    private void checkToken(HttpServletRequest request) {
+        String guest = request.getHeader("guest");
 
+        if(guest==null)
+            throw new CustomException(ErrorCode.NOT_ENOGH_HEADER);
+
+        String token = resolveToken(request);
+
+        if(guest.equals("false")){
+            jwtTokenProvider.validationTokenIn(token);
+        }
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
+            return  bearerToken.substring(7);
+        }
+        return null;
+    }
 
     // ip 조회
      private String getIp() {
@@ -279,15 +275,5 @@ public class VideoApiController {
             ip = req.getRemoteAddr();
         return ip;
     }
-    // userid 조회
-    private Long retrieveUserId() {
-        String userEmail = authenticationFacade.getAuthentication().getName();
-      if(userEmail.equals("anonymousUser")){
-          return 0L;
-      }
-            Users users = usersRepository.findByEmail(userEmail).orElseThrow(()->{
-                throw new CustomException(ErrorCode.NOT_FOUND_USER,"유저가 조회되지 않습니다.");
-            });
-            return users.getId();
-    }
+
 }

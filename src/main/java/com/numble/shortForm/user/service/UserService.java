@@ -15,10 +15,12 @@ import com.numble.shortForm.user.entity.ProfileImg;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.jwt.JwtTokenProvider;
 import com.numble.shortForm.user.repository.UsersRepository;
+import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.entity.Thumbnail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,7 +94,7 @@ public class UserService {
 
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
 
-        if (!jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
+        if (!jwtTokenProvider.refreshValidation(reissueDto.getRefreshToken())) {
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
         }
         log.info("refresh token 체크 완료");
@@ -176,5 +178,10 @@ public class UserService {
 
         usersRepository.save(users);
 
+    }
+
+    public Result getUserList(Pageable pageable) {
+
+        return usersRepository.retrieveAllUser(pageable);
     }
 }

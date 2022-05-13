@@ -1,4 +1,4 @@
-package com.numble.shortForm.security;
+package com.numble.shortForm.config.security;
 
 import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.json.JSONObject;

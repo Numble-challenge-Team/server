@@ -84,13 +84,13 @@ public class Video extends BaseTime {
 
     public void updateVideo(UpdateVideoDto dto,Thumbnail thumbnail,List<VideoHash> videoHashes) {
 
-        if(dto.getTitle()!=null)
+        if(!dto.getTitle().isEmpty())
             this.title = dto.getTitle();
-        if(dto.getDescription()!=null)
+        if(!dto.getDescription().isEmpty())
             this.description = dto.getDescription();
         if(dto.getDuration()!=null)
             this.duration = dto.getDuration();
-        if(thumbnail.getUrl()!=null && thumbnail.getName()!=null)
+        if(thumbnail.getName()!=null)
             this.thumbnail =thumbnail;
         if(videoHashes!=null)
             this.videoHashes = videoHashes;

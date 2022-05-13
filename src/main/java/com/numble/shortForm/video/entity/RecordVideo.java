@@ -1,6 +1,7 @@
 package com.numble.shortForm.video.entity;
 
 import com.numble.shortForm.time.BaseTime;
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +23,8 @@ public class RecordVideo extends BaseTime {
     private Long id;
 
 
-    @Column(name = "user_id")
-    private Long userId;
+    @Column(name = "users_id")
+    private Long usersId;
 
     @Column(name = "video_id")
     private Long videoId;
@@ -40,8 +41,11 @@ public class RecordVideo extends BaseTime {
     }
 
 
-    public RecordVideo(Long userId, Long videoId) {
-        this.userId = userId;
+    @QueryProjection
+    public RecordVideo(Long usersId, Long videoId) {
+        this.usersId = usersId;
         this.videoId = videoId;
     }
+
+
 }

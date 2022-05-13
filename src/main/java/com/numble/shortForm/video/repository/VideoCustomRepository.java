@@ -26,4 +26,6 @@ public interface VideoCustomRepository {
     Page<VideoResponseDto> retrieveConcernVideo(List<Long> videoids,Long videoId,Pageable pageable,Long userId);
 
     Result retrieveLikesVideos(Pageable pageable,Long userId);
+
+    Result retrieveRecord(Pageable pageable, Long userId);
 }
