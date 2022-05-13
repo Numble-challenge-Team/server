@@ -167,9 +167,9 @@ public class VideoService {
         }else{
             videoResponseDto.setLiked(false);
         }
-
          // 로그 저장
-        recordVideoRepository.save(new RecordVideo(videoId,userId));
+        log.info("로그 저장");
+        recordVideoRepository.save(new RecordVideo(userId,videoId));
 
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
@@ -366,9 +366,12 @@ public class VideoService {
     }
 
     public void updateEmbeddedVideo(UpdateVideoDto updateVideoDto) throws IOException {
+        log.info("embedded");
 
         Video video = videoRepository.getById(updateVideoDto.getVideoId());
+
         Video updateVideo = reFreshVideo(video, updateVideoDto);
+
         videoRepository.save(updateVideo);
     }
 
@@ -377,21 +380,22 @@ public class VideoService {
         Thumbnail thumbnail =new Thumbnail(null,null);
         List<VideoHash> videoHashes =null;
 
-        if (updateVideoDto.getThumbnail().getSize() !=0L) {
+        if (!updateVideoDto.getThumbnail().isEmpty()) {
             log.info("upload !!");
             String url = s3Uploader.uploadFile(updateVideoDto.getThumbnail(),"thumbnail");
             thumbnail = new Thumbnail(url,updateVideoDto.getThumbnail().getOriginalFilename());
         }
         if (!updateVideoDto.getTags().isEmpty()) {
             videoHashRepository.deleteAllByVideo(video);
+
             List<HashTag> tags = hashTagService.createTag(updateVideoDto.getTags());
                     videoHashes = tags.stream().map(t -> new VideoHash(video, t))
                     .collect(Collectors.toList());
         }
 
         if (updateVideoDto.getType().equals(VideoType.upload)) {
-
-            VimeoResponse vimeoResponse = vimeoLogic.deleteVimeo(video.getVideoCode());
+            log.info("type check ");
+            VimeoResponse vimeoResponse = vimeoLogic.deleteVimeo(video.getVideoUrl());
             log.info("remove originalVideo {}",vimeoResponse.getStatusCode());
 
             String videoCode = vimeoLogic.uploadNormalVideo(updateVideoDto.getVideo());
@@ -428,4 +432,6 @@ public class VideoService {
         }
         return true;
     }
+
+
 }

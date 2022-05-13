@@ -4,6 +4,7 @@ import com.numble.shortForm.video.entity.VideoType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.web.multipart.MultipartFile;
 import org.w3c.dom.stylesheets.LinkStyle;
@@ -14,12 +15,11 @@ import java.util.List;
 
 @Getter
 @Setter
+@ToString
 public class UpdateVideoDto {
 
-    @NotNull
     private Long usersId;
 
-    @NotNull
     private Long videoId;
 
     @ApiModelProperty(value = "type",dataType="String", example="embedded / upload")
@@ -27,9 +27,9 @@ public class UpdateVideoDto {
 
     private String url=null;
 
-    private MultipartFile thumbnail=null;
+    private MultipartFile thumbnail;
 
-    private MultipartFile video=null;
+    private MultipartFile video;
 
     private List<String> tags=null;
 

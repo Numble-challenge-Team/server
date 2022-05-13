@@ -18,6 +18,7 @@ import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import com.numble.shortForm.video.dto.response.Result;
 import com.numble.shortForm.video.dto.response.VideoDetailResponseDto;
 import com.numble.shortForm.video.dto.response.VideoResponseDto;
+import com.numble.shortForm.video.entity.RecordVideo;
 import com.numble.shortForm.video.entity.VideoType;
 import com.numble.shortForm.video.service.VideoService;
 import com.numble.shortForm.video.vimeo.Vimeo;
@@ -117,6 +118,8 @@ public class VideoApiController {
     @PostMapping("/upload/normal")
     public ResponseEntity<?> uploadNormalVideo(@ModelAttribute NormalVideoRequestDto normalVideoRequestDto) throws IOException, VimeoException, InterruptedException {
 
+
+
         MultipartFile video = normalVideoRequestDto.getVideo();
         //비디오 파일 저장
         String videoEndpoint = vimeoLogic.uploadNormalVideo(video);
@@ -142,6 +145,9 @@ public class VideoApiController {
     })
     @PostMapping("/upload/embedded")
     public ResponseEntity<?> uploadEmbeddedVideo(@ModelAttribute EmbeddedVideoRequestDto embeddedVideoRequestDto) throws IOException {
+
+        log.info("embedded dto {}",embeddedVideoRequestDto);
+        log.info("thumb {}",embeddedVideoRequestDto.getThumbnail().isEmpty());
 
         String userEmail = authenticationFacade.getAuthentication().getName();
 
@@ -173,11 +179,11 @@ public class VideoApiController {
 //        comment 개발후 작성
         String ip = getIp();
         Long userId = retrieveUserId();
-
+        log.info("user id {}",userId);
         if (userId == 0L) {
             return videoService.retrieveDetailNotLogin(videoId,ip);
         }
-
+        log.info("로그인한 detail");
         return videoService.retrieveDetail(videoId,ip,userId);
 
     }
@@ -218,6 +224,9 @@ public class VideoApiController {
             return videoService.retrieveConcernVideosNotLogin(pageable,videoId,retrieveUserId());
     }
 
+
+
+
     @ApiOperation(value = "유저가 좋아요한 비디오 리스트", notes = "유저가 좋아요한 비디오의 리시트, 토큰값 필요")
     @GetMapping("/likesVideos")
     public Result getLikesVideos(Pageable pageable) {
@@ -240,20 +249,39 @@ public class VideoApiController {
 //
 //    }
 
+    @GetMapping("/record")
+    public ResponseEntity retrieveRecord(Pageable pageable) {
+//        Long userId = retrieveUserId();
+//        if (userId == 0L) {
+//            throw new RuntimeException();
+//        }
+//        List<RecordVideo> recordVideos = videoService.retrieveRecord(pageable, userId);
+
+        return ResponseEntity.ok().body("recordVideos");
+
+    }
+
     @ApiOperation(value = "영상 정보수정", notes = "업데이트 안할 필드는 , 빼주시면 됩니다.")
     @PutMapping("/update")
-    public ResponseEntity updateVideo(UpdateVideoDto updateVideoDto) throws IOException {
+    public ResponseEntity updateVideo(@ModelAttribute UpdateVideoDto updateVideoDto) throws IOException {
+
+        log.info("dto {}",updateVideoDto);
+        log.info("thumbnail {}",updateVideoDto.getThumbnail().isEmpty());
+        log.info("tags {}",updateVideoDto.getTags().isEmpty());
+        log.info("title {}",updateVideoDto.getTitle().isEmpty());
 
         if (!retrieveUserId().equals(updateVideoDto.getUsersId())) {
             throw new CustomException(ErrorCode.ACCESS_DENIED, "비디오에 접근 권한이 없습니다.");
         }
 
         if (updateVideoDto.getType().equals(VideoType.upload)) {
+            log.info("uplaod type");
             videoService.updateUploadVideo(updateVideoDto);
             return ResponseEntity.ok().body("변경완료");
         }
 
         videoService.updateEmbeddedVideo(updateVideoDto);
+        log.info("emebedded ");
         return ResponseEntity.ok().body("변경완료");
     }
 
