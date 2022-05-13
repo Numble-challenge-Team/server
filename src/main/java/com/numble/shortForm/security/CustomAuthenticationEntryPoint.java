@@ -1,8 +1,9 @@
 package com.numble.shortForm.security;
 
 import com.numble.shortForm.exception.ErrorCode;
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONObject;
+
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -16,26 +17,52 @@ import java.io.IOException;
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
-        String exception = (String)request.getAttribute("exception");
 
+
+    @Override
+    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
+        String exception = (String)request.getAttribute("exception");
+        ErrorCode errorCode;
+
+        log.debug("log: exception: {} ", exception);
+
+        /**
+         * 토큰 없는 경우
+         */
         if(exception == null) {
-            setResponse(response, ErrorCode.UNKNOWN_ERROR);
+            errorCode = ErrorCode.NON_LOGIN;
+            setResponse(response, errorCode);
+            return;
         }
-        else {
-            setResponse(response, ErrorCode.ACCESS_DENIED);
+
+        /**
+         * 토큰 만료된 경우
+         */
+        if(exception.equals(ErrorCode.EXPIRED_TOKEN.getDetail())) {
+            errorCode = ErrorCode.EXPIRED_TOKEN;
+            setResponse(response, errorCode);
+            return;
         }
+
+        /**
+         * 토큰 시그니처가 다른 경우
+         */
+//        if(exception.equals(ErrorCode.INVALID_TOKEN.getCode())) {
+//            errorCode = ErrorCode.INVALID_TOKEN;
+//            setResponse(response, errorCode);
+//        }
     }
+
+    /**
+     * 한글 출력을 위해 getWriter() 사용
+     */
     private void setResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
-        JSONObject responseJson = new JSONObject();
-        responseJson.put("message", errorCode.getDetail());
-        responseJson.put("code", errorCode.getHttpStatus().value());
-        responseJson.put("type",errorCode.getHttpStatus().name());
-
-        response.getWriter().print(responseJson);
+        response.getWriter().println("{ \"message\" : \"" + errorCode.getDetail()
+                + "\", \"code\" : \"" +  errorCode.getHttpStatus().name()
+                + "\", \"status\" : " + errorCode.getHttpStatus().value()
+                + ", \"errors\" : [ ] }");
     }
+
 }

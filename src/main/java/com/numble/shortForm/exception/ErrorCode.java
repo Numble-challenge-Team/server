@@ -8,6 +8,10 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    NOT_OWNER(HttpStatus.FORBIDDEN,"해당 글의 권한이 없습니다"),
+    NOT_FOUND_COMMENT(HttpStatus.NOT_FOUND,"댓글이 존재하지 않습니다."),
+    NON_LOGIN(HttpStatus.BAD_REQUEST,"로그인 된 상태가 아닙니다."),
+    EXPIRE_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 만료되었습니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND,"해당하는 유저가 존재하지 않습니다"),
     NOT_FOUND_VIDEO(HttpStatus.NOT_FOUND,"해당하는 비디오가 존재하지 않습니다"),
     EXIST_EMAIL_ERROR(HttpStatus.BAD_REQUEST,"이미 존재하는 이메일입니다."),
@@ -16,9 +20,11 @@ public enum ErrorCode {
     BAD_REQUEST_PARAM(HttpStatus.BAD_REQUEST, "잘못된 요청입니다."),
     BAD_REQUEST_POST(HttpStatus.BAD_REQUEST, "글 입력값을 다시 확인하세요."),
 
+
+
     NONE_AUTHENTICATION_TOKEN(HttpStatus.BAD_REQUEST,"권한 정보가 없는 토큰입니다."),
     WRONG_TYPE_TOKEN(HttpStatus.BAD_REQUEST,"토큰의 타입이 틀렸습니다."),
-    EXPIRED_TOKEN(HttpStatus.BAD_REQUEST,"만료된 토큰입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED,"만료된 토큰입니다."),
     UNSUPPORTED_TOKEN(HttpStatus.BAD_REQUEST,"지원하지 않는 토큰입니다."),
     WRONG_TOKEN(HttpStatus.BAD_REQUEST,"토큰이 이상합니다"),
     UNKNOWN_ERROR(HttpStatus.BAD_REQUEST,"토큰이 유효하지 않습니다."),

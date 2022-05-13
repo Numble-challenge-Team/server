@@ -1,5 +1,8 @@
 package com.numble.shortForm.video.vimeo;
 
+import io.netty.handler.codec.base64.Base64Encoder;
+import lombok.extern.slf4j.Slf4j;
+import org.json.JSONException;
 import org.springframework.context.annotation.Configuration;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,7 +13,9 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,6 +40,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
+@Slf4j
 public class Vimeo {
 
     private static final String VIMEO_SERVER = "https://api.vimeo.com";
@@ -162,25 +168,45 @@ public class Vimeo {
         return apiRequest(completeUri, HttpDelete.METHOD_NAME, null, null);
     }
 
-    public String addVideo(File file, boolean upgradeTo1080) throws IOException, VimeoException {
+    public String addVideo(File file, boolean upgradeTo1080) throws IOException, VimeoException, InterruptedException {
         return addVideo(new FileInputStream(file), upgradeTo1080);
     }
 
-    public String addVideo(byte[] bytes, boolean upgradeTo1080) throws IOException, VimeoException {
+    public String addVideo(byte[] bytes, boolean upgradeTo1080) throws IOException, VimeoException, InterruptedException {
         return addVideo(new ByteArrayInputStream(bytes), upgradeTo1080);
     }
 
-    public String addVideo(InputStream inputStream, boolean upgradeTo1080) throws IOException, VimeoException {
+    public String addVideo(InputStream inputStream, boolean upgradeTo1080) throws IOException, VimeoException, InterruptedException {
         Map<String, String> params = new HashMap<String, String>();
         params.put("type", "streaming");
-        params.put("redirect_url", "");
+        params.put("redirect_url", "https://www.carrot19.shop/api/v1/admins/health");
+//        String encoding = Base64.getEncoder().encodeToString(("test1:test1").getBytes(StandardCharsets.UTF_8));
+//        params.put("Authorization","Basic "+encoding);
         params.put("upgrade_to_1080", upgradeTo1080 ? "true" : "false");
         VimeoResponse response = beginUploadVideo(params);
+
+//        log.info("begin upload video {}",response);
+        log.info("response {}",response.getJson());
         if (response.getStatusCode() == 201) {
-            uploadVideo(inputStream, response.getJson().getString("upload_link_secure"));
+            log.info("upload 전");
+            try {
+                uploadVideo(inputStream, response.getJson().getString("upload_link_secure"));
+            } catch (ClientProtocolException e) {
+                log.info("error {}",e);
+            }
+            log.info("upload 후");
             response = endUploadVideo(response.getJson().getString("complete_uri"));
             if (response.getStatusCode() == 201) {
-                return response.getJson().getString("Location");
+//                Thread.sleep(5000L);
+//                log.info("end uplaod video {}",response);
+
+                try{
+                String location = response.getJson().getString("Location");
+                   return location;
+                }catch (JSONException e){
+                    return response.getJson().getString("location");
+                }
+
             }
         }
         throw new VimeoException(new StringBuffer("HTTP Status Code: ").append(response.getStatusCode()).toString());
@@ -328,6 +354,7 @@ public class Vimeo {
                 out.put(header.getName(), header.getValue());
             }
             responseAsString = out.toString();
+            log.info("response as String {}",responseAsString);
         } else if (statusCode != 204) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             response.getEntity().writeTo(out);
@@ -346,9 +373,12 @@ public class Vimeo {
             json = new JSONObject();
             headers = new JSONObject();
         }
+//        log.info("json {}",json);
         VimeoResponse vimeoResponse = new VimeoResponse(json, headers, statusCode);
+//        log.info("vimeo get.json {}",vimeoResponse.getJson());
         response.close();
         client.close();
         return vimeoResponse;
     }
 }
+

@@ -1,11 +1,14 @@
 package com.numble.shortForm.video.entity;
 
 import com.numble.shortForm.hashtag.entity.VideoHash;
+import com.numble.shortForm.report.entity.Report;
 import com.numble.shortForm.time.BaseTime;
 import com.numble.shortForm.user.entity.Users;
+import com.numble.shortForm.video.dto.request.UpdateVideoDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.*;
 
@@ -18,6 +21,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @NoArgsConstructor(access = PROTECTED)
 @Getter
+@DynamicUpdate
 public class Video extends BaseTime {
 
     @Id
@@ -31,6 +35,8 @@ public class Video extends BaseTime {
     private Thumbnail thumbnail;
 
     private String videoUrl;
+
+    private String videoCode;
 
     private String description;
 
@@ -56,8 +62,11 @@ public class Video extends BaseTime {
     @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
     private List<VideoLike> videoLikes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "video",cascade = CascadeType.ALL)
+    private List<Report> reports  = new ArrayList<>();
+
     @Builder
-    public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration) {
+    public Video(String title, Thumbnail thumbnail, String videoUrl, String description, VideoType videoType, boolean isBlock, Users users, Long duration,String videoCode) {
         this.title = title;
         this.thumbnail = thumbnail;
         this.videoUrl = videoUrl;
@@ -66,9 +75,26 @@ public class Video extends BaseTime {
         this.isBlock = isBlock;
         this.users = users;
         this.duration =duration;
+        this.videoCode=videoCode;
     }
 
     public void addVideoHash(List<VideoHash> tags) {
         this.videoHashes = tags;
+    }
+
+    public void updateVideo(UpdateVideoDto dto,Thumbnail thumbnail,List<VideoHash> videoHashes) {
+
+        if(dto.getTitle()!=null)
+            this.title = dto.getTitle();
+        if(dto.getDescription()!=null)
+            this.description = dto.getDescription();
+        if(dto.getDuration()!=null)
+            this.duration = dto.getDuration();
+        if(thumbnail.getUrl()!=null && thumbnail.getName()!=null)
+            this.thumbnail =thumbnail;
+        if(videoHashes!=null)
+            this.videoHashes = videoHashes;
+        if(dto.getUrl()!=null)
+            this.videoUrl = dto.getUrl();
     }
 }

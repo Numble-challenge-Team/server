@@ -5,12 +5,17 @@ import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.request.PageDto;
 import com.numble.shortForm.response.Response;
+import com.numble.shortForm.upload.S3Uploader;
+import com.numble.shortForm.user.dto.request.UpdateUserRequestDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
+import com.numble.shortForm.user.dto.response.UserProfileDto;
 import com.numble.shortForm.user.dto.response.UserResponseDto;
 import com.numble.shortForm.user.entity.Authority;
+import com.numble.shortForm.user.entity.ProfileImg;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.user.jwt.JwtTokenProvider;
 import com.numble.shortForm.user.repository.UsersRepository;
+import com.numble.shortForm.video.entity.Thumbnail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,13 +29,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Service
 @Slf4j
 public class UserService {
@@ -40,7 +47,9 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final RedisTemplate redisTemplate;
+    private final S3Uploader s3Uploader;
 
+    private static final String basic_url ="https://oz-s3-bucket.s3.ap-northeast-2.amazonaws.com/profile/basic.png";
     @Transactional
     public ResponseEntity<?> signUp(UserRequestDto.SignUp signUpDto) {
 
@@ -53,6 +62,7 @@ public class UserService {
                 .nickname(signUpDto.getNickname())
                 .password(passwordEncoder.encode(signUpDto.getPassword()))
                 .roles(Collections.singletonList(Authority.ROLE_USER.name()))
+                .profileImg(new ProfileImg("basic.png",basic_url))
                 .build();
 
         usersRepository.save(user);
@@ -82,26 +92,37 @@ public class UserService {
 
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
 
-//        if (jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
-//            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
-//        }
+        if (!jwtTokenProvider.validationToken(reissueDto.getRefreshToken())) {
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
+        }
+        log.info("refresh token 체크 완료");
+
         Authentication authentication = jwtTokenProvider.getAuthentication(reissueDto.getAccessToken());
+
         log.info("authentication getPrincipal {}",authentication.getPrincipal());
         log.info("authentication getname {}",authentication.getName());
         String refreshToken =(String) redisTemplate.opsForValue().get("RT:"+authentication.getName());
 
         if (ObjectUtils.isEmpty(refreshToken)) {
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM);
+            log.info("Refresh toekn이 존재하지 않습니다.");
+            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh toekn이 존재하지 않습니다.");
         }
+        log.info("original refreshToken {}",refreshToken);
+        log.info("get refreshToken {}",reissueDto.getRefreshToken());
+
         if(!refreshToken.equals(reissueDto.getRefreshToken())) {
+            log.info("Refresh Token 정보가 it is not correct.");
             throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 일치하지 않습니다.");
         }
-
+        log.info("token info  생성 직전 ");
         UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
+        log.info("token info {}",tokenInfo);
 
         redisTemplate.opsForValue()
                 .set("RT:" + authentication.getName(), tokenInfo.getRefreshToken(), tokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);
+        log.info("redis tmeplate 토큰 저장");
         return Response.success(tokenInfo, "Token 정보가 갱신되었습니다.", HttpStatus.OK);
+
     }
 
     public ResponseEntity<?> logout(UserRequestDto.Logout logoutDto) {
@@ -128,13 +149,32 @@ public class UserService {
 //
 //    }
     @Transactional
-    public void signOut(String usersEmail) {
-        Users users = usersRepository.findByEmail(usersEmail).orElseThrow(()->
+    public void signOut(Long userId) {
+        Users users = usersRepository.findById(userId).orElseThrow(()->
                 new CustomException(ErrorCode.NOT_FOUND_USER));
         log.info("users {}",users);
          usersRepository.delete(users);
     }
 
 
+    public UserProfileDto getProfile(Long userId) {
+        return usersRepository.getProfile(userId);
+    }
 
+    public void updateProfile(UpdateUserRequestDto updateUserRequestDto,Long userId) throws IOException {
+        Users users = usersRepository.findById(userId).orElseThrow(()->
+                new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        MultipartFile img = updateUserRequestDto.getImg();
+        ProfileImg profileImg=null;
+
+        if (updateUserRequestDto.getImg().getSize() !=0L) {
+            String url = s3Uploader.uploadFile(updateUserRequestDto.getImg(),"thumbnail");
+            profileImg = new ProfileImg(url,updateUserRequestDto.getImg().getOriginalFilename());
+        }
+        users.updateProfile(updateUserRequestDto.getNickname(), profileImg);
+
+        usersRepository.save(users);
+
+    }
 }

@@ -37,8 +37,9 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
         String token = resolveToken((HttpServletRequest) request);
+//        log.info("token {}",token);
         // token 유효성 체크
-            if (token != null && jwtTokenProvider.validationToken(token)) {
+            if (token != null && jwtTokenProvider.revalidationToken(token,(HttpServletRequest) request)) {
     
                 String isLogout = (String) redisTemplate.opsForValue().get(token);
     
@@ -54,7 +55,6 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
 
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
             return  bearerToken.substring(7);
         }

@@ -3,6 +3,8 @@ package com.numble.shortForm.user.repository;
 import com.numble.shortForm.admin.response.QUserAdminResponse;
 import com.numble.shortForm.admin.response.UserAdminResponse;
 import com.numble.shortForm.request.PageDto;
+import com.numble.shortForm.user.dto.response.QUserProfileDto;
+import com.numble.shortForm.user.dto.response.UserProfileDto;
 import com.numble.shortForm.user.entity.QUsers;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -31,5 +33,17 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
                 .limit(pageDto.getSize())
                 .fetch();
         return new PageImpl<>(fetch, PageRequest.of(pageDto.getPage(), pageDto.getSize()),fetch.size());
+    }
+
+    @Override
+    public UserProfileDto getProfile(Long userId) {
+        return queryFactory.select(new QUserProfileDto(
+                users.id,
+                users.profileImg,
+                users.nickname,
+                users.email
+        )).from(users)
+                .where(users.id.eq(userId))
+                .fetchOne();
     }
 }
