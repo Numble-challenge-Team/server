@@ -113,7 +113,7 @@ public class VideoService {
     }
 
     //로그인하지않은 상세피이지
-    public VideoDetailResponseDto retrieveDetailNotLogin(Long videoId, String ip) {
+    public VideoDetailResponseDto retrieveDetailNotLogin(Long videoId, String ip) throws IOException {
         String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
         if (IsExistRedis == null) {
             videoRepository.updateView(videoId);
@@ -124,8 +124,14 @@ public class VideoService {
         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                 .collect(Collectors.toList());
 
-        videoResponseDto.setTags(tags);
+        if(videoResponseDto.getTags()!=null&& !videoResponseDto.getTags().isEmpty()){
+            videoResponseDto.setTags(tags);
+        }
         videoResponseDto.setLiked(false);
+
+        if(videoResponseDto.getVideoType() ==VideoType.upload){
+            getIframeUrl(videoResponseDto);
+        }
 
         return VideoDetailResponseDto.builder()
                 .videoDetail(videoResponseDto)
@@ -148,19 +154,15 @@ public class VideoService {
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,userId);
 
         if(videoResponseDto.getVideoType() ==VideoType.upload){
-             Vimeo vimeo = new Vimeo(vimeoToken);
-            VimeoResponse videoInfo = vimeo.getVideoInfo(videoResponseDto.getUrl());
-            JSONObject json = videoInfo.getJson();
-            JSONObject obj =(JSONObject) json.get("embed");
-
-            videoResponseDto.setUrl( String.valueOf(obj.get("html")));
-
+            getIframeUrl(videoResponseDto);
         }
 
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
 
-         videoResponseDto.setTags(tags);
+        if(videoResponseDto.getTags()!=null&& !videoResponseDto.getTags().isEmpty()){
+            videoResponseDto.setTags(tags);
+        }
          //좋아요 눌렀는지 확인
         if (searchVideoLike(userId, videoId) != null) {
             videoResponseDto.setLiked(true);
@@ -168,7 +170,7 @@ public class VideoService {
             videoResponseDto.setLiked(false);
         }
          // 로그 저장
-        log.info("로그 저장");
+
         recordVideoRepository.save(new RecordVideo(userId,videoId));
 
         return VideoDetailResponseDto.builder()
@@ -176,6 +178,16 @@ public class VideoService {
                 .comments(commentService.getCommentList(videoId,userId))
                 .concernVideoList(retrieveConcernVideosNotLogin(PageRequest.of(0,5),videoId,userId))
                 .build();
+    }
+
+    private void getIframeUrl(VideoResponseDto videoResponseDto) throws IOException {
+        log.info("들어옴");
+        Vimeo vimeo = new Vimeo(vimeoToken);
+        VimeoResponse videoInfo = vimeo.getVideoInfo(videoResponseDto.getUrl());
+        JSONObject json = videoInfo.getJson();
+        JSONObject obj =(JSONObject) json.get("embed");
+
+        videoResponseDto.setUrl( String.valueOf(obj.get("html")));
     }
 
 
