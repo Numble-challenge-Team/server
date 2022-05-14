@@ -30,6 +30,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/comments/")
 @RequiredArgsConstructor
 @Slf4j
+@Api(tags = "댓글 API")
 public class CommentApiController {
 
     private final AuthenticationFacade authenticationFacade;

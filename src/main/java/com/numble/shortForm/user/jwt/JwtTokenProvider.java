@@ -38,7 +38,7 @@ public class JwtTokenProvider {
     private static final String BEARER_TYPE ="Bearer";
 //    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 10 *1000L;
 
-    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 60*60 *1000L; //30 Minutes
+    private static final Long ACCESS_TOKEN_EXPIRE_TIME =  60 * 60 *1000L; //30 Minutes
     private static final Long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 *1000L; //7 days
 
     private final Key key;
