@@ -8,6 +8,7 @@ import com.numble.shortForm.report.entity.Report;
 import com.numble.shortForm.report.repository.ReportRepository;
 import com.numble.shortForm.report.service.ReportService;
 import com.numble.shortForm.user.repository.UsersRepository;
+import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reports/")
+@Api(tags = "신고 API")
 public class ReportController {
 
 //    private final ReportRepository reportRepository;

@@ -168,6 +168,7 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 .limit(pageable.getPageSize())
                 .fetch();
 
+
         int size = queryFactory.select(new QVideoResponseDto(
                         video.id
                 )).from(video)
@@ -177,7 +178,14 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 .limit(1)
                 .fetch().size();
 
-        return new Result(size >0 ?true : false,fetch,fetch.size());
+        int total = queryFactory.select(new QVideoResponseDto(
+                        video.id
+                )).from(video)
+                .leftJoin(video.users, users)
+                .where(video.title.contains(query).or(video.description.contains(query)))
+                .fetch().size();
+
+        return new Result(size >0 ?true : false,fetch,fetch.size(),total);
     }
 
     @Override

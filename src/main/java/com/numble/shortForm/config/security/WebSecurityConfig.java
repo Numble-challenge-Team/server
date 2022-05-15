@@ -12,6 +12,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.frameoptions.StaticAllowFromStrategy;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.List;
@@ -27,12 +29,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
+//"\"http://localhost:3000\",\"https://ourszoo.site\",\"http://43.200.3.52:80\",\"http://54.180.33.135:80\""
 
         http
+
+                .headers().frameOptions().deny()
+                .and()
                 .cors().configurationSource(request -> {
                     var cors = new CorsConfiguration();
-                    cors.setAllowedOrigins(List.of("http://localhost:3000","https://ourszoo.site"));
+                    cors.setAllowedOrigins(List.of("http://localhost:3000","https://www.ourszoo.site","https://www.ourszoo.site"));
                     cors.setAllowedMethods(List.of("GET","POST", "PUT", "DELETE", "OPTIONS"));
                     cors.setAllowedHeaders(List.of("*"));
                     return cors;
@@ -45,7 +50,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/api/v1/users/reissue").permitAll()
                 .antMatchers("/api/v1/comments/update ","/api/v1/comments/create","/api/v1/comments/createChild","/api/v1/comments/like/**",
-                        "/api/v1/users/update","/api/v1/users/profile","/api/v1/videos/likesVideos","/api/v1/users/test",
+                        "/api/v1/users/update","/api/v1/users/profile","/api/v1/videos/likesVideos",
                         "/api/v1/videos/upload/embedded","/api/v1/videos/like/**","/api/v1/videos/retrieve/myVideo").hasRole("USER")
                 .anyRequest().permitAll()
                 .and()
@@ -61,17 +66,5 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-//    @Bean
-//    public CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration configuration = new CorsConfiguration();
-//
-//        configuration.addAllowedOrigin("*");
-//        configuration.addAllowedHeader("*");
-//        configuration.addAllowedMethod("*");
-//        configuration.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", configuration);
-//        return source;
-//    }
+
 }

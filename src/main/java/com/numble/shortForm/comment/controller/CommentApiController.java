@@ -18,6 +18,7 @@ import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.video.dto.response.IsLikeResponse;
 import io.swagger.annotations.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/comments/")
 @RequiredArgsConstructor
+@Slf4j
+@Api(tags = "댓글 API")
 public class CommentApiController {
 
     private final AuthenticationFacade authenticationFacade;
@@ -72,6 +75,7 @@ public class CommentApiController {
 
     @PostMapping("/like/{commentId}")
     public ResponseEntity<?> requestLike(@PathVariable("commentId")Long commentId) {
+
         String userEmail = authenticationFacade.getAuthentication().getName();
 
         boolean bol = commentLikeService.requestLikeComment(userEmail, commentId);
@@ -93,6 +97,8 @@ public class CommentApiController {
     public List<OriginalComment> CommentResponseList(@PathVariable("videoId") Long videoId){
 
         Long userId = userLibrary.retrieveUserId();
+        log.info("userId {}" ,userId);
+
         return commentService.getCommentList(videoId,userId);
 
     }
@@ -106,6 +112,7 @@ public class CommentApiController {
     @GetMapping("/getChild/{commentId}")
     public List<OriginalComment> recommentList(@PathVariable("commentId")Long commentId){
         Long userId = userLibrary.retrieveUserId();
+        log.info("userId {}" ,userId);
         return  commentService.getChildList(commentId,userId);
 
 
