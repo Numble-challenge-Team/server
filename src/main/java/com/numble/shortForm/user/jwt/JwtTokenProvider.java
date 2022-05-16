@@ -38,7 +38,7 @@ public class JwtTokenProvider {
     private static final String BEARER_TYPE ="Bearer";
 //    private static final Long ACCESS_TOKEN_EXPIRE_TIME = 10 *1000L;
 
-    private static final Long ACCESS_TOKEN_EXPIRE_TIME =  60 * 60 *1000L; //30 Minutes
+    private static final Long ACCESS_TOKEN_EXPIRE_TIME =  2*60 * 60 *1000L; //30 Minutes
     private static final Long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 *1000L; //7 days
 
     private final Key key;
@@ -146,14 +146,17 @@ public class JwtTokenProvider {
             log.info("UnSupproted JWT Token {}", e);
 
         } catch (IllegalArgumentException e) {
-            log.info("JWT claims string is empty {}",e);
+            log.error("JWT claims string is empty {}");
+//            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE,"string is empty");
+            throw new CustomException(ErrorCode.EMPTY_TOKEN,"string is empty");
 
         }
         return false;
     }
 
+    //chek
     public boolean validationTokenIn(String token) throws ExpiredJwtException{
-        log.info("access-token : {}" ,token);
+        log.info("validationTokneIn");
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
@@ -170,18 +173,22 @@ public class JwtTokenProvider {
 
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty {}",e);
-
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }catch (Exception e){
+            log.info("{}",e);
         }
         return false;
     }
 
     public boolean revalidationToken(String token, HttpServletRequest request) {
 
+        log.info("revalidation");
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token {}", e);
+            request.setAttribute("exception",ErrorCode.MALFORM_EXEPTIOM.getDetail());
         }catch (ExpiredJwtException e){
             request.setAttribute("exception",ErrorCode.EXPIRED_TOKEN.getDetail());
         }
@@ -189,26 +196,34 @@ public class JwtTokenProvider {
             log.info("UnSupproted JWT Token {}", e);
         } catch (IllegalArgumentException e) {
             log.info("JWT claims string is empty {}",e);
+            request.setAttribute("exception",ErrorCode.ILLEGAL_TOKEN.getDetail());
+            throw new CustomException(ErrorCode.EMPTY_TOKEN,"string is empty");
+
         }
-        log.info("해당하지 않음");
         return false;
     }
+    // refresh token 체크
     public boolean refreshValidation(String token) {
-
+        log.info("refershValidation");
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token {}", e);
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE,"유효하지않은 토큰");
+
         }catch (ExpiredJwtException e){
+            log.info("REFRESH toekn 만료");
             throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE);
         }
         catch (UnsupportedJwtException e) {
             log.info("UnSupproted JWT Token {}", e);
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE);
         } catch (IllegalArgumentException e) {
-            log.info("JWT claims string is empty {}",e);
+            log.error("JWT claims string is empty {}",e);
+            throw new CustomException(ErrorCode.REFRESH_TOKEN_EXPIRE,"string is empty");
         }
-        log.info("해당하지 않음");
-        return false;
+
+
     }
 }
