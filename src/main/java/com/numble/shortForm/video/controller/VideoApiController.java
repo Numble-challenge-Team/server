@@ -250,10 +250,10 @@ public class VideoApiController {
         String guest = request.getHeader("guest");
 
         if(guest==null)
-            throw new CustomException(ErrorCode.NOT_ENOGH_HEADER);
+            throw new CustomException(ErrorCode.NOT_ENOUGH_HEADER);
 
         String token = resolveToken(request);
-
+        log.info("guest :{}",guest);
         if(guest.equals("false")){
             jwtTokenProvider.validationTokenIn(token);
         }

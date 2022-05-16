@@ -180,12 +180,10 @@ public class Vimeo {
         Map<String, String> params = new HashMap<String, String>();
         params.put("type", "streaming");
         params.put("redirect_url", "");
-//        String encoding = Base64.getEncoder().encodeToString(("test1:test1").getBytes(StandardCharsets.UTF_8));
-//        params.put("Authorization","Basic "+encoding);
+
         params.put("upgrade_to_1080", upgradeTo1080 ? "true" : "false");
         VimeoResponse response = beginUploadVideo(params);
 
-//        log.info("begin upload video {}",response);
         log.info("response {}",response.getJson());
         if (response.getStatusCode() == 201) {
             log.info("upload 전");
