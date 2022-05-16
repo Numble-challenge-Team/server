@@ -1,4 +1,11 @@
 spring:
+
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
   jpa:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     hibernate:
@@ -13,12 +20,17 @@ spring:
     database: mysql
 
   mvc:
+    converters:
+      preferred-json-mapper: gson
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-      url: jdbc:mysql://localhost:3306/video
-      username: root
-      password: 6568
+      url: jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
+#      url: jdbc:mysql://localhost:3306/video
+      username: admin
+      password: 1234qwer!
+#      username: root
+#      password: 6568
       driver-class-name: com.mysql.cj.jdbc.Driver
 
   redis:
@@ -33,3 +45,34 @@ springfox:
   documentation:
     swagger:
         use-model-v3: false
+
+server:
+  port: 8081
+#  ssl:
+#    enabled: true
+#    key-store: keystore.p12
+#    key-store-password: 123456
+#    key-store-type: PKCS12
+#    key-alias: bns-ssl
+file:
+  dir:
+
+logging:
+  level:
+    com:
+      amazonaws:
+        util:
+          EC2MetadataUtils: ERROR
+cloud:
+  aws:
+    s3:
+      bucket : oz-s3-bucket
+    credentials:
+      access-key: AKIA5SJUPZ5LG7AVCRIQ
+      secret-key: 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
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+vimeo:
+  token: e1c91d1b5707153b88827be43da0ef0f

@@ -179,7 +179,13 @@ public class Vimeo {
     public String addVideo(InputStream inputStream, boolean upgradeTo1080) throws IOException, VimeoException, InterruptedException {
         Map<String, String> params = new HashMap<String, String>();
         params.put("type", "streaming");
+
         params.put("redirect_url", "");
+
+
+
+
+
 
         params.put("upgrade_to_1080", upgradeTo1080 ? "true" : "false");
         VimeoResponse response = beginUploadVideo(params);
