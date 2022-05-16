@@ -5,6 +5,7 @@ import com.numble.shortForm.config.security.AuthenticationFacade;
 import com.numble.shortForm.user.repository.UsersRepository;
 import com.numble.shortForm.user.service.UserService;
 import com.numble.shortForm.video.dto.response.Result;
+import com.numble.shortForm.video.service.VideoService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.RequiredArgsConstructor;
@@ -12,9 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Api(tags = "어드민 API")
 public class AdminApiController {
     private final UserService userService;
+    private final VideoService videoService;
     private final UsersRepository usersRepository;
     private final AuthenticationFacade authenticationFacade;
 
@@ -36,4 +39,27 @@ public class AdminApiController {
 
          return ResponseEntity.ok().body(result);
     }
+
+//    @ApiOperation(value = "유저 개인 페이지,비디오 리스트와 유저정보 같이 반환")
+
+
+
+    @ApiOperation(value = "Admin 비디오 삭제 ")
+    @DeleteMapping("/delete/video/{videoId}")
+    public ResponseEntity<?> deleteVideo(@PathVariable("videoId") Long videoId) {
+
+
+        boolean bol = videoService.deleteVideoAdmin(videoId);
+
+        Map<String,String> obj = new HashMap<>();
+
+        if(bol== true)
+            obj.put("isDeleted","true");
+        else{
+            obj.put("isDeleted","false");
+        }
+        return ResponseEntity.ok().body(obj);
+    }
+
+
 }
