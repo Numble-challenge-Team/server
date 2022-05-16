@@ -9,11 +9,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class UpdateUserRequestDto {
 
 
-    private Long usersId;
 
-    private String nickname;
 
-    private MultipartFile img;
+    private String nickname=null;
+
+    private MultipartFile img=null;
 
 
 

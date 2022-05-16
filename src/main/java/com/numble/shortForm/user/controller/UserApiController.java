@@ -178,7 +178,11 @@ public class UserApiController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity updateProfile(UpdateUserRequestDto updateUserRequestDto) throws IOException {
+    public ResponseEntity updateProfile(@ModelAttribute UpdateUserRequestDto updateUserRequestDto) throws IOException {
+        log.info("img {}",updateUserRequestDto.getImg());
+        log.info("nickname {}",updateUserRequestDto.getNickname());
+        log.info("img is empty {}",updateUserRequestDto.getImg().isEmpty());
+        log.info("nickname is empth {}",updateUserRequestDto.getImg().isEmpty());
         Long userId = userLibrary.retrieveUserId();
 
         if (userId == 0L) {

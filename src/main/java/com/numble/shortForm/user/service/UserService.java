@@ -95,27 +95,26 @@ public class UserService {
     public ResponseEntity<?> reissue(UserRequestDto.Reissue reissueDto) {
 
         if (!jwtTokenProvider.refreshValidation(reissueDto.getRefreshToken())) {
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 유효하지 않습니다.");
+            throw new CustomException(ErrorCode.NOT_VALID_REFRESH,"Refresh Token 정보가 유효하지 않습니다.");
         }
-        log.info("refresh token 체크 완료");
+//        log.info("refresh token 체크 완료");
 
         Authentication authentication = jwtTokenProvider.getAuthentication(reissueDto.getAccessToken());
 
-        log.info("authentication getPrincipal {}",authentication.getPrincipal());
-        log.info("authentication getname {}",authentication.getName());
+
         String refreshToken =(String) redisTemplate.opsForValue().get("RT:"+authentication.getName());
 
         if (ObjectUtils.isEmpty(refreshToken)) {
             log.info("Refresh toekn이 존재하지 않습니다.");
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh toekn이 존재하지 않습니다.");
+            throw new CustomException(ErrorCode.NOT_VALID_REFRESH,"Refresh toekn이 존재하지 않습니다.");
         }
-        log.info("original refreshToken {}",refreshToken);
-        log.info("get refreshToken {}",reissueDto.getRefreshToken());
+
 
         if(!refreshToken.equals(reissueDto.getRefreshToken())) {
             log.info("Refresh Token 정보가 it is not correct.");
-            throw new CustomException(ErrorCode.BAD_REQUEST_PARAM,"Refresh Token 정보가 일치하지 않습니다.");
+            throw new CustomException(ErrorCode.NOT_VALID_REFRESH,"Refresh Token 정보가 일치하지 않습니다.");
         }
+
         log.info("token info  생성 직전 ");
         UserResponseDto.TokenInfo tokenInfo = jwtTokenProvider.generateToken(authentication);
         log.info("token info {}",tokenInfo);
@@ -164,17 +163,26 @@ public class UserService {
     }
 
     public void updateProfile(UpdateUserRequestDto updateUserRequestDto,Long userId) throws IOException {
+
         Users users = usersRepository.findById(userId).orElseThrow(()->
                 new CustomException(ErrorCode.NOT_FOUND_USER));
 
         MultipartFile img = updateUserRequestDto.getImg();
         ProfileImg profileImg=null;
-
-        if (updateUserRequestDto.getImg().getSize() !=0L) {
-            String url = s3Uploader.uploadFile(updateUserRequestDto.getImg(),"thumbnail");
-            profileImg = new ProfileImg(url,updateUserRequestDto.getImg().getOriginalFilename());
+        String nick=null;
+        if(!updateUserRequestDto.getNickname().isEmpty()){
+            usersRepository.findByNickname(updateUserRequestDto.getNickname()).ifPresent(user -> {
+                throw new CustomException(ErrorCode.EXIST_NICKNAME_ERROR, String.format("[%s]는 존재하는 닉네임입니다.", updateUserRequestDto.getNickname()));
+            });
+            nick = updateUserRequestDto.getNickname();
         }
-        users.updateProfile(updateUserRequestDto.getNickname(), profileImg);
+
+        if (!updateUserRequestDto.getImg().isEmpty()) {
+            String url = s3Uploader.uploadFile(updateUserRequestDto.getImg(),"thumbnail");
+            profileImg = new ProfileImg(updateUserRequestDto.getImg().getOriginalFilename(),url);
+        }
+        System.out.println(nick);
+        users.updateProfile(nick, profileImg);
 
         usersRepository.save(users);
 

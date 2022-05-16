@@ -94,16 +94,16 @@ public class VideoService {
                 .build();
         Video createdVideo = videoRepository.save(video);
 
-        if (embeddedVideoRequestDto.getTags().isEmpty()) {
-            return;
+
+        if(!embeddedVideoRequestDto.getTags().isEmpty()){
+
+            List<HashTag> tags = hashTagService.createTag(embeddedVideoRequestDto.getTags());
+
+            List<VideoHash> videoHashes = tags.stream().map(t -> new VideoHash(createdVideo, t))
+                    .collect(Collectors.toList());
+            createdVideo.addVideoHash(videoHashes);
         }
 
-        List<HashTag> tags = hashTagService.createTag(embeddedVideoRequestDto.getTags());
-
-        List<VideoHash> videoHashes = tags.stream().map(t -> new VideoHash(createdVideo, t))
-                .collect(Collectors.toList());
-
-        createdVideo.addVideoHash(videoHashes);
         videoRepository.save(createdVideo);
 
     }
@@ -121,12 +121,13 @@ public class VideoService {
         }
         // 기본적으로 id는 1부터 생성되기때문에, 0에는 일치하는 값이 없다.
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,0L);
+
         List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                 .collect(Collectors.toList());
 
-        if(videoResponseDto.getTags()!=null&& !videoResponseDto.getTags().isEmpty()){
+//        if(videoResponseDto.getTags()!=null&& !videoResponseDto.getTags().isEmpty()){
             videoResponseDto.setTags(tags);
-        }
+//        }
         videoResponseDto.setLiked(false);
 
         if(videoResponseDto.getVideoType() ==VideoType.upload){
@@ -143,26 +144,24 @@ public class VideoService {
     public VideoDetailResponseDto retrieveDetail(Long videoId,String ip,Long userId) throws IOException {
 
 
-        // Redis로 5분동안 같은 ip접속시 조회수 제한
+        // Redis로 10분동안 같은 ip접속시 조회수 제한
         String IsExistRedis = (String) redisTemplate.opsForValue().get(videoId + "/" + ip);
         if (IsExistRedis == null) {
             videoRepository.updateView(videoId);
-            redisTemplate.opsForValue().set(videoId+"/"+ip,"true",5L,TimeUnit.MINUTES);
+            redisTemplate.opsForValue().set(videoId+"/"+ip,"true",10L,TimeUnit.MINUTES);
         }
-
 
         VideoResponseDto videoResponseDto = videoRepository.retrieveDetail(videoId,userId);
 
         if(videoResponseDto.getVideoType() ==VideoType.upload){
             getIframeUrl(videoResponseDto);
         }
-
+        // tag처리
          List<String> tags = videoHashRepository.findAllByVideoId(videoId).stream().map(h ->h.getHashTag().getTagName())
                  .collect(Collectors.toList());
-
-        if(videoResponseDto.getTags()!=null&& !videoResponseDto.getTags().isEmpty()){
             videoResponseDto.setTags(tags);
-        }
+
+
          //좋아요 눌렀는지 확인
         if (searchVideoLike(userId, videoId) != null) {
             videoResponseDto.setLiked(true);
@@ -170,7 +169,6 @@ public class VideoService {
             videoResponseDto.setLiked(false);
         }
          // 로그 저장
-
         recordVideoRepository.save(new RecordVideo(userId,videoId));
 
         return VideoDetailResponseDto.builder()
@@ -247,22 +245,9 @@ public class VideoService {
         //사용자가 봤던 비디오 id 리스트 가져옴 5개
         List<Long> recordVideoList = recordVideoService.getRecordVideoList(videoId, users.getId(),PageRequest.of(0,PAGE_SIZE, Sort.by("created_at").descending()));
 
-
-//        for (Long aLong : recordVideoList) {
-//            Video video = videoRepository.findById(aLong).orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_VIDEO, "db에러 관리자에게 문의하세요"));
-//            List<VideoHash> videoHashes = video.getVideoHashes();
-//            for (VideoHash videoHash : videoHashes) {
-//                System.out.println(videoHash.getHashTag().getTagName());
-//            }
-//        }
-//
-//        hashTagService.getTagByConcern(recordVideoList);
-//
-//        videoRepository.getVideoByTag(videoId);
-
-
         return null;
     }
+
     // 로그인하지 않은 관심영상
     public Page<VideoResponseDto> retrieveConcernVideosNotLogin(Pageable pageable,Long videoId,Long userId) {
 
@@ -350,9 +335,8 @@ public class VideoService {
 
         Video createdVideo = videoRepository.save(video);
 
-        if ( normalVideoRequestDto.getTags().isEmpty()) {
-            return;
-        }
+
+        if(!normalVideoRequestDto.getTags().isEmpty()){
 
         List<HashTag> tags = hashTagService.createTag(normalVideoRequestDto.getTags());
 
@@ -360,6 +344,7 @@ public class VideoService {
                 .collect(Collectors.toList());
 
         createdVideo.addVideoHash(videoHashes);
+        }
         videoRepository.save(createdVideo);
     }
 
@@ -446,4 +431,13 @@ public class VideoService {
     }
 
 
+    public boolean deleteVideoAdmin(Long videoId) {
+        Video video = videoRepository.findById(videoId).orElseThrow(() ->
+                new CustomException(ErrorCode.NOT_FOUND_VIDEO));
+        videoRepository.delete(video);
+
+        if(videoRepository.existsById(videoId))
+            return false;
+        return true;
+    }
 }

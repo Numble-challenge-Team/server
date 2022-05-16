@@ -47,10 +47,16 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         /**
          * 토큰 시그니처가 다른 경우
          */
-//        if(exception.equals(ErrorCode.INVALID_TOKEN.getCode())) {
-//            errorCode = ErrorCode.INVALID_TOKEN;
-//            setResponse(response, errorCode);
-//        }
+        if(exception.equals(ErrorCode.MALFORM_EXEPTIOM.getDetail())) {
+            log.info("melform error 호출");
+            errorCode = ErrorCode.MALFORM_EXEPTIOM;
+            setResponse(response, errorCode);
+        }
+
+        if(exception.equals(ErrorCode.ILLEGAL_TOKEN.getDetail())) {
+            errorCode = ErrorCode.ILLEGAL_TOKEN;
+            setResponse(response, errorCode);
+        }
     }
 
     /**

@@ -33,7 +33,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
         http
 
-                .headers().frameOptions().deny()
+                .headers().frameOptions().disable()
                 .and()
                 .cors().configurationSource(request -> {
                     var cors = new CorsConfiguration();

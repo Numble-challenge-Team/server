@@ -88,8 +88,9 @@ public class Users extends BaseTime implements UserDetails {
 
         if (nickname != null)
             this.nickname =nickname;
-        if (profileImg.getName() != null && profileImg.getUrl() != null)
+        if (profileImg!=null)
             this.profileImg =profileImg;
+
 
     }
 
