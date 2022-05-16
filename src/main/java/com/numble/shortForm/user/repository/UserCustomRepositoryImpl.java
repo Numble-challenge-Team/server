@@ -46,7 +46,8 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
                 users.id,
                 users.profileImg,
                 users.nickname,
-                users.email
+                users.email,
+                        users.created_at
         )).from(users)
                 .where(users.id.eq(userId))
                 .fetchOne();
