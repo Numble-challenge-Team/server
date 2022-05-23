@@ -63,16 +63,4 @@ logging:
       amazonaws:
         util:
           EC2MetadataUtils: ERROR
-cloud:
-  aws:
-    s3:
-      bucket : oz-s3-bucket
-    credentials:
-      access-key: AKIA5SJUPZ5LG7AVCRIQ
-      secret-key: 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
-    region:
-      static: ap-northeast-2
-    stack:
-      auto: false
-vimeo:
-  token: e1c91d1b5707153b88827be43da0ef0f
+
