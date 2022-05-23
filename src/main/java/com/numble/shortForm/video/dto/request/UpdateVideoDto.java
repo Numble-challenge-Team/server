@@ -5,12 +5,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.stylesheets.LinkStyle;
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Getter
@@ -25,7 +21,7 @@ public class UpdateVideoDto {
     @ApiModelProperty(value = "type",dataType="String", example="embedded / upload")
     private VideoType type;
 
-    private String url=null;
+    private String videoUrl =null;
 
     private MultipartFile thumbnail;
 

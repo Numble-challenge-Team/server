@@ -94,7 +94,7 @@ public class Video extends BaseTime {
             this.thumbnail =thumbnail;
         if(videoHashes!=null)
             this.videoHashes = videoHashes;
-        if(dto.getUrl()!=null)
-            this.videoUrl = dto.getUrl();
+        if(dto.getVideoUrl()!=null)
+            this.videoUrl = dto.getVideoUrl();
     }
 }

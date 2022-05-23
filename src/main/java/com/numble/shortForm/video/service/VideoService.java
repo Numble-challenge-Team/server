@@ -397,7 +397,7 @@ public class VideoService {
 
             String videoCode = vimeoLogic.uploadNormalVideo(updateVideoDto.getVideo());
 
-            updateVideoDto.setUrl(videoCode);
+            updateVideoDto.setVideoUrl(videoCode);
         }
 
         video.updateVideo(updateVideoDto,thumbnail,videoHashes);
