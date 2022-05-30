@@ -1,4 +1,11 @@
 spring:
+
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
   jpa:
     database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
     hibernate:
@@ -13,13 +20,15 @@ spring:
     database: mysql
 
   mvc:
+    converters:
+      preferred-json-mapper: gson
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-      url: jdbc:mysql://localhost:3306/video
-      username: root
-      password: 6568
-      driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
+    username: admin
+    password: 1234qwer!
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   redis:
     host: localhost
@@ -32,4 +41,22 @@ jwt:
 springfox:
   documentation:
     swagger:
-        use-model-v3: false
+      use-model-v3: false
+
+server:
+  port: 8081
+#  ssl:
+#    enabled: true
+#    key-store: keystore.p12
+#    key-store-password: 123456
+#    key-store-type: PKCS12
+#    key-alias: bns-ssl
+file:
+  dir:
+
+logging:
+  level:
+    com:
+      amazonaws:
+        util:
+          EC2MetadataUtils: ERROR
