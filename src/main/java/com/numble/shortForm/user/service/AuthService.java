@@ -119,7 +119,7 @@ public class AuthService {
             redisTemplate.opsForValue()
                     .set(accessToken,"logout",expiration,TimeUnit.MILLISECONDS);
             CookieUtil.deleteCookie(response,"accessToken");
-            CookieUtil.deleteCookie(response,"");
+            CookieUtil.deleteCookie(response,"refreshToken");
             return Response.success("로그아웃 되었습니다.");
         }
 
