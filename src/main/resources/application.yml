@@ -25,13 +25,12 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
-      url: jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
-#      url: jdbc:mysql://localhost:3306/video
-      username: admin
-      password: 1234qwer!
-#      username: root
-#      password: 6568
-      driver-class-name: com.mysql.cj.jdbc.Driver
+
+    url: jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
+    username: admin
+    password: 1234qwer!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 
   redis:
     host: localhost
@@ -44,7 +43,7 @@ jwt:
 springfox:
   documentation:
     swagger:
-        use-model-v3: false
+      use-model-v3: false
 
 server:
   port: 8081
@@ -63,4 +62,3 @@ logging:
       amazonaws:
         util:
           EC2MetadataUtils: ERROR
-

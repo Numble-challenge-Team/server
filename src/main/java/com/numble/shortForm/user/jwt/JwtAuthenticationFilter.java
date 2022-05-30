@@ -1,5 +1,6 @@
 package com.numble.shortForm.user.jwt;
 
+import com.numble.shortForm.config.cookie.CookieUtil;
 import com.numble.shortForm.exception.CustomException;
 import com.numble.shortForm.exception.ErrorCode;
 import com.numble.shortForm.user.entity.Authority;
@@ -36,8 +37,15 @@ public class JwtAuthenticationFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
+        HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 
-        String token = resolveToken((HttpServletRequest) request);
+        String token =null;
+
+        if (CookieUtil.getCookie(httpServletRequest, "accessToken") != null) {
+            token =CookieUtil.getCookie(httpServletRequest, "accessToken");
+        }else{
+            token = resolveToken((HttpServletRequest) request);
+        }
 
         // token 유효성 체크
 
