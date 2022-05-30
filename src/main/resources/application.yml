@@ -25,10 +25,12 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
   datasource:
+
     url: jdbc:mysql://short-form.c9gpvkyx6ehe.ap-northeast-2.rds.amazonaws.com/short_form
     username: admin
     password: 1234qwer!
     driver-class-name: com.mysql.cj.jdbc.Driver
+
 
   redis:
     host: localhost
