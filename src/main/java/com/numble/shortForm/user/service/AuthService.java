@@ -54,8 +54,8 @@ public class AuthService {
         // refreshToken redis 저장
         redisTemplate.opsForValue()
                 .set("RT:" +authentication.getName(),tokenInfo.getRefreshToken(),tokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);
-        CookieUtil.addCookie(response,"accessToken",tokenInfo.getAccessToken(),ACCESS_COOKIE_MAX_AGE);
         CookieUtil.addCookie(response,"refreshToken",tokenInfo.getRefreshToken(),REFRESH_COOKIE_MAX_AGE);
+        CookieUtil.addCookie(response,"accessToken",tokenInfo.getAccessToken(),ACCESS_COOKIE_MAX_AGE);
 
         return tokenInfo;
 

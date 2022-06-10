@@ -1,5 +1,6 @@
 package com.numble.shortForm.user.controller;
 
+import com.numble.shortForm.config.cookie.CookieUtil;
 import com.numble.shortForm.exception.ErrorResponse;
 import com.numble.shortForm.response.ResponseDto;
 import com.numble.shortForm.user.dto.request.UserRequestDto;
@@ -11,11 +12,9 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,14 +28,42 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @GetMapping("/test/{message}")
+    public ResponseEntity test(@PathVariable String message){
+
+        return ResponseEntity.ok().body(message);
+    }
+
+
     @ApiOperation(value = "로그인", notes = "<big>로그인에 성공하면, accessToken, RefreshToken 반환</big>")
     @ApiResponses({
             @ApiResponse(code = 200, message = "로그인 성공 토큰생성", response = ResponseDto.class),
             @ApiResponse(code = 403, message = "권한 없음", response = ErrorResponse.class, responseContainer = "List")
     })
     @PostMapping("/login")
-    public ResponseDto login(@RequestBody UserRequestDto.Login loginDto, HttpServletResponse response) {
+    public ResponseDto login(@RequestBody UserRequestDto.Login loginDto, HttpServletResponse response,HttpServletRequest request) {
+
+
         UserResponseDto.TokenInfo tokenInfo = authService.login(loginDto,response);
+
+        response.setHeader("Access-Control-Allow-Credentials","true");
+
+
+        ResponseCookie cookie = ResponseCookie.from("nodomain", "dd")
+                .maxAge(60*60080)
+                .path("/")
+                .sameSite("None")
+                .secure(true)
+                .build();
+        response.setHeader("set-cookie",cookie.toString());
+
+        ResponseCookie cookie2 = ResponseCookie.from("yesdomain", "dd")
+                .maxAge(60*60080)
+                .path("/")
+                .sameSite("None")
+                .secure(true)
+                .build();
+        response.setHeader("set-cookie",cookie2.toString());
 
         return ResponseDto.builder()
                 .state(200)

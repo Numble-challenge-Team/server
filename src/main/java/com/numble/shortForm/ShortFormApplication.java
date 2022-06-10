@@ -1,8 +1,12 @@
 package com.numble.shortForm;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.apache.tomcat.util.http.LegacyCookieProcessor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.session.DefaultCookieSerializerCustomizer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -10,6 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
+import java.net.MalformedURLException;
 import java.util.TimeZone;
 
 @SpringBootApplication
@@ -33,5 +38,11 @@ public class ShortFormApplication implements WebMvcConfigurer {
 	@Override
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**").allowedOrigins("*");
+	}
+
+	@Bean
+	public WebServerFactoryCustomizer<TomcatServletWebServerFactory> cookieProcessorCustomizer() {
+		return (factory) -> factory
+				.addContextCustomizers((context) -> context.setCookieProcessor(new LegacyCookieProcessor()));
 	}
 }

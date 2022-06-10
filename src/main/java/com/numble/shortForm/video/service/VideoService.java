@@ -301,6 +301,29 @@ public class VideoService {
 
     }
 
+    public Result retrieveMainVideoListNoOffset(Long videoId,Pageable pageable,Long userId) {
+        Result result = videoRepository.retrieveMainVideoNoOffset(videoId,userId,pageable);
+
+
+        Users users = usersRepository.findById(userId).orElseThrow(()->
+                new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        result.setContents(checkLiked(users,result.getContents()));
+
+        return result;
+
+    }
+
+    //로그인하지않은 메인 동여상 리스트
+    public Result retrieveMainVideoListNotLoginNoOffset(Long videoId,Pageable pageable) {
+
+        return  videoRepository.retrieveMainVideoNotLoginNoOffset(videoId,pageable);
+
+    }
+
+
+
+
     private VideoLike searchVideoLike(Long usersId, Long videoId) {
 
         Users users = usersRepository.getById(usersId);
