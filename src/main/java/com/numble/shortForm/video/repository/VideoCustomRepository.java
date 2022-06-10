@@ -21,7 +21,11 @@ public interface VideoCustomRepository {
 
     Result retrieveMainVideo(Pageable pageable,Long userId);
 
+    Result retrieveMainVideoNoOffset(Long videoId,Long userId,Pageable pageable);
+
     Result retrieveMainVideoNotLogin(Pageable pageable);
+
+    Result retrieveMainVideoNotLoginNoOffset(Long videoId,Pageable pageable);
 
     Page<VideoResponseDto> retrieveConcernVideo(List<Long> videoids,Long videoId,Pageable pageable,Long userId);
 

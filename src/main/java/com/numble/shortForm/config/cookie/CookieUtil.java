@@ -2,30 +2,39 @@ package com.numble.shortForm.config.cookie;
 
 import com.numble.shortForm.user.repository.UsersRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
+@Slf4j
 public class CookieUtil {
 
 
 
     public static void addCookie(HttpServletResponse response,String name,String value,int age) {
 
-        Cookie cookie = new Cookie(name,value);
-        cookie.setPath("/");
-        cookie.setMaxAge(age);
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
+
+
+        ResponseCookie cookie = ResponseCookie.from(name, value)
+                .maxAge(age)
+                .path("/")
+                .sameSite("None")
+                .secure(true)
+                .build();
+        response.setHeader("set-cookie",cookie.toString());
 
     }
 
     public static String getCookie(HttpServletRequest request, String name) {
 
         Cookie[] cookies = request.getCookies();
-
-        if(cookies !=null || cookies.length>0 ){
+        log.info("request {}",request.getAttribute("domain"));
+        log.info("url {}",request.getRequestURL());
+        log.info("cookies null check {}",cookies ==null);
+        if(cookies !=null ){
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals(name)) {
                     return cookie.getValue();

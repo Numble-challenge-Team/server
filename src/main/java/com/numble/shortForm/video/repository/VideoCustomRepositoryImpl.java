@@ -9,6 +9,7 @@ import com.numble.shortForm.video.entity.QVideoLike;
 import com.numble.shortForm.video.entity.VideoLike;
 import com.numble.shortForm.video.sort.VideoSort;
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -226,6 +227,42 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
     }
 
     @Override
+    public Result retrieveMainVideoNoOffset(Long videoId,Long userId, Pageable pageable) {
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.thumbnail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description,
+                        users.id.eq(userId),
+                        video.videoType,
+                        users.profileImg
+                )).from(video)
+                .leftJoin(video.users, users)
+                .orderBy(VideoSort.sort(pageable))
+                .offset(pageable.getPageNumber()* pageable.getPageSize())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        int size = queryFactory.select(new QVideoResponseDto(
+                        video.id
+                )).from(video)
+                .leftJoin(video.users, users)
+                .offset((pageable.getPageNumber() + 1) * pageable.getPageSize())
+                .limit(1)
+                .fetch().size();
+
+        return new Result(size >0 ?true : false,fetch,fetch.size());
+    }
+
+    @Override
     public Result retrieveMainVideoNotLogin(Pageable pageable) {
 
         List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
@@ -255,6 +292,42 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
                 )).from(video)
                 .leftJoin(video.users, users)
                 .offset((pageable.getPageNumber() + 1) * pageable.getPageSize())
+                .limit(1)
+                .fetch().size();
+
+        return new Result(size >0 ?true : false,fetch,fetch.size());
+    }
+
+    @Override
+    public Result retrieveMainVideoNotLoginNoOffset(Long videoId, Pageable pageable) {
+
+        List<VideoResponseDto> fetch = queryFactory.select(new QVideoResponseDto(
+                        video.id,
+                        users.id,
+                        users.nickname,
+                        video.showId,
+                        video.title,
+                        video.thumbnail,
+                        video.isBlock,
+                        video.view,
+                        video.created_at,
+                        video.duration,
+                        video.videoLikes.size(),
+                        video.description,
+                        video.isNull(),
+                        video.videoType,
+                        users.profileImg
+                )).from(video)
+                .leftJoin(video.users, users)
+                .where(ltVideoId(videoId))
+                .orderBy(VideoSort.sort(pageable))
+                .limit(pageable.getPageSize())
+                .fetch();
+        int size = queryFactory.select(new QVideoResponseDto(
+                        video.id
+                )).from(video)
+                .leftJoin(video.users, users)
+                .where(ltVideoId(videoId))
                 .limit(1)
                 .fetch().size();
 
@@ -343,5 +416,12 @@ public class VideoCustomRepositoryImpl implements VideoCustomRepository{
     @Override
     public Result retrieveRecord(Pageable pageable, Long userId) {
         return null;
+    }
+
+    private BooleanExpression ltVideoId(Long videoId) {
+        if (videoId == null) {
+            return null;
+        }
+        return video.id.lt(videoId);
     }
 }
