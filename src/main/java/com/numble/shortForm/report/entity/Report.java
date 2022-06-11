@@ -1,6 +1,7 @@
 package com.numble.shortForm.report.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.numble.shortForm.user.entity.Users;
 import com.numble.shortForm.video.entity.Video;
 import lombok.AccessLevel;
@@ -25,10 +26,12 @@ public class Report {
 
     private String detail;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id")
     private Users users;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "video_id")
     private Video video;

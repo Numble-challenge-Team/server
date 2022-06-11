@@ -11,10 +11,7 @@ import com.numble.shortForm.user.repository.UsersRepository;
 import io.swagger.annotations.Api;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,7 +24,7 @@ public class ReportController {
     private final UserLibrary userLibrary;
 
     @PostMapping("/create")
-    public ResponseEntity createReport(ReportRequestDto reportRequestDto) {
+    public ResponseEntity createReport(@RequestBody ReportRequestDto reportRequestDto) {
 
         Long userId = userLibrary.retrieveUserId();
 
