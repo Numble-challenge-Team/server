@@ -9,6 +9,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     protected ResponseEntity<ErrorResponse> CustomExceptionHandler(CustomException e) {
+        System.out.println("Exception catch");
         return ErrorResponse.toResponseEntity(e);
 
     }

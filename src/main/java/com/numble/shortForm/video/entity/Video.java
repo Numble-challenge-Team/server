@@ -97,4 +97,8 @@ public class Video extends BaseTime {
         if(dto.getVideoUrl()!=null)
             this.videoUrl = dto.getVideoUrl();
     }
+
+    public void changeBlock(boolean bol) {
+        this.isBlock =bol;
+    }
 }
